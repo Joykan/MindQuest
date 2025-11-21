@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MindQuest - AI Mental Wellbeing Companion</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <h1>🧘 MindQuest</h1>
+            <p class="subtitle">Your compassionate AI companion for mental wellbeing</p>
+        </header>
+
+        <!-- Navigation Tabs -->
+        <nav class="tabs">
+            <button class="tab-btn active" data-tab="mood-log">Mood Log</button>
+            <button class="tab-btn" data-tab="journal">Journal</button>
+            <button class="tab-btn" data-tab="insights">Insights</button>
+            <button class="tab-btn" data-tab="activities">Activities</button>
+            <button class="tab-btn" data-tab="suggestions">Suggestions</button>
+        </nav>
+
+        <!-- User Info Section -->
+        <div class="user-section" id="user-section">
+            <div class="user-info">
+                <input type="text" id="user-name" placeholder="Enter your name" />
+                <input type="email" id="user-email" placeholder="Enter your email" />
+                <button id="create-user-btn">Create Profile</button>
+            </div>
+            <div id="user-status" class="user-status hidden"></div>
+        </div>
+
+        <!-- Mood Log Tab -->
+        <section id="mood-log" class="tab-content active">
+            <h2>How are you feeling today?</h2>
+            <div class="mood-selector">
+                <div class="emotion-grid">
+                    <div class="emotion-card" data-emotion="happy" data-category="positive">
+                        <span class="emoji">😊</span>
+                        <span class="emotion-name">Happy</span>
+                    </div>
+                    <div class="emotion-card" data-emotion="calm" data-category="positive">
+                        <span class="emoji">😌</span>
+                        <span class="emotion-name">Calm</span>
+                    </div>
+                    <div class="emotion-card" data-emotion="anxious" data-category="negative">
+                        <span class="emoji">😰</span>
+                        <span class="emotion-name">Anxious</span>
+                    </div>
+                    <div class="emotion-card" data-emotion="sad" data-category="negative">
+                        <span class="emoji">😢</span>
+                        <span class="emotion-name">Sad</span>
+                    </div>
+                    <div class="emotion-card" data-emotion="frustrated" data-category="negative">
+                        <span class="emoji">😤</span>
+                        <span class="emotion-name">Frustrated</span>
+                    </div>
+                    <div class="emotion-card" data-emotion="excited" data-category="positive">
+                        <span class="emoji">🤩</span>
+                        <span class="emotion-name">Excited</span>
+                    </div>
+                    <div class="emotion-card" data-emotion="tired" data-category="neutral">
+                        <span class="emoji">😴</span>
+                        <span class="emotion-name">Tired</span>
+                    </div>
+                    <div class="emotion-card" data-emotion="neutral" data-category="neutral">
+                        <span class="emoji">😐</span>
+                        <span class="emotion-name">Neutral</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="mood-details" class="mood-details hidden">
+                <h3>Intensity (1-10)</h3>
+                <input type="range" id="intensity-slider" min="1" max="10" value="5" />
+                <span id="intensity-value">5</span>
+                
+                <h3>Notes (optional)</h3>
+                <textarea id="mood-notes" placeholder="What's on your mind?"></textarea>
+                
+                <button id="submit-mood-btn">Log Mood</button>
+            </div>
+
+            <div id="mood-history" class="mood-history"></div>
+        </section>
+
+        <!-- Journal Tab -->
+        <section id="journal" class="tab-content">
+            <h2>Journal Your Thoughts</h2>
+            <div class="journal-container">
+                <textarea id="journal-entry" placeholder="Write your thoughts, feelings, or experiences here..."></textarea>
+                <div class="journal-actions">
+                    <button id="save-journal-btn">Save Entry</button>
+                    <button id="get-prompt-btn">Get Writing Prompt</button>
+                </div>
+                <div id="journal-entries" class="journal-entries"></div>
+            </div>
+        </section>
+
+        <!-- Insights Tab -->
+        <section id="insights" class="tab-content">
+            <h2>Your Insights</h2>
+            <button id="generate-insights-btn">Generate Insights</button>
+            <button id="analyze-patterns-btn">Analyze Patterns</button>
+            <div id="insights-content" class="insights-content">
+                <div class="insight-card">
+                    <p>Click "Generate Insights" to see personalized insights based on your mood patterns.</p>
+                </div>
+            </div>
+            
+            <div id="emotion-summary" class="emotion-summary">
+                <h3>Emotion Summary</h3>
+                <div id="summary-stats"></div>
+            </div>
+        </section>
+
+        <!-- Activities Tab -->
+        <section id="activities" class="tab-content">
+            <h2>Track Your Activities</h2>
+            <div class="activity-form">
+                <input type="text" id="activity-name" placeholder="Activity name" />
+                <select id="activity-category">
+                    <option value="self_care">Self Care</option>
+                    <option value="social">Social</option>
+                    <option value="physical">Physical</option>
+                    <option value="creative">Creative</option>
+                    <option value="mindfulness">Mindfulness</option>
+                </select>
+                <input type="number" id="activity-duration" placeholder="Duration (minutes)" min="1" />
+                <input type="range" id="activity-effectiveness" min="1" max="10" value="5" />
+                <label>Effectiveness: <span id="effectiveness-value">5</span></label>
+                <button id="log-activity-btn">Log Activity</button>
+            </div>
+            <div id="activities-list" class="activities-list"></div>
+        </section>
+
+        <!-- Suggestions Tab -->
+        <section id="suggestions" class="tab-content">
+            <h2>Personalized Suggestions</h2>
+            <button id="get-support-btn">Get Support & Suggestions</button>
+            <div id="support-input-container" class="hidden">
+                <textarea id="support-request" placeholder="Tell me what's on your mind..."></textarea>
+                <button id="submit-support-btn">Get Support</button>
+            </div>
+            <div id="suggestions-list" class="suggestions-list"></div>
+        </section>
+
+        <!-- Loading Indicator -->
+        <div id="loading" class="loading hidden">
+            <div class="spinner"></div>
+            <p>Processing...</p>
+        </div>
+
+        <!-- Messages -->
+        <div id="messages" class="messages"></div>
+    </div>
+
+    <script src="js/jacclient.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>
+
