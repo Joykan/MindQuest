@@ -1,0 +1,34 @@
+{
+  "name": "mindquest",
+  "version": "1.0.0",
+  "description": "AI Mental-Wellbeing Companion built with Jaseci for mood tracking, pattern analysis and personalized insights.",
+  "type": "module",
+  "main": "api.js",
+  "scripts": {
+    "start": "node api.js",
+    "dev": "node api.js",
+    "test": "echo \"No tests yet\" && exit 0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Joykan/MindQuest.git"
+  },
+  "keywords": [
+    "AI",
+    "mental-health",
+    "jaseci",
+    "jac",
+    "companion",
+    "mood-tracking"
+  ],
+  "author": "Kandie Joy Jepkorir",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Joykan/MindQuest/issues"
+  },
+  "homepage": "https://github.com/Joykan/MindQuest#readme",
+  "dependencies": {
+    "express": "^5.1.0",
+    "cors": "^2.8.5"
+  }
+}
