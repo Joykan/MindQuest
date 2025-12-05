@@ -1,47 +1,64 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>MindQuest — Companion</title>
-  <link rel="stylesheet" href="styles.css" />
+  <meta charset="UTF-8">
+  <title>MindQuest - AI Companion</title>
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <div id="app" class="app">
-    <aside class="sidebar">
-      <div class="brand">
-        <div class="logo">🧭</div>
+
+<div id="app" class="app">
+
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="brand">
+      <div class="logo">🧠</div>
+      <div>
         <h1>MindQuest</h1>
+        <p class="small-muted" style="margin:0;font-size:11px">AI Mental Health Companion</p>
       </div>
+    </div>
 
-      <nav class="nav">
-        <button data-view="home" class="nav-btn active">Home</button>
-        <button data-view="log-mood" class="nav-btn">Log Mood</button>
-        <button data-view="journal" class="nav-btn">Journal</button>
-        <button data-view="insights" class="nav-btn">Insights</button>
-        <button data-view="history" class="nav-btn">History</button>
-      </nav>
+    <div class="nav">
+      <button class="nav-btn active" data-view="chat">Chat</button>
+      <button class="nav-btn" data-view="placeholder-moods" disabled>📊 Mood Logs</button>
+      <button class="nav-btn" data-view="placeholder-profile" disabled>👤 Profile</button>
+    </div>
 
-      <footer class="sidebar-foot">
-        <small>Local Dev • <span id="api-status">checking…</span></small>
-      </footer>
-    </aside>
-
-    <main class="main">
-      <header class="topbar">
-        <h2 id="view-title">Home</h2>
-        <div class="actions">
-          <input id="user-id" placeholder="user id (e.g. user_1)" />
-          <button id="refresh-btn">Refresh</button>
-        </div>
-      </header>
-
-      <section id="content" class="content">
-        <!-- views are rendered here -->
-      </section>
-    </main>
+    <div class="sidebar-foot">
+      <div>Made with ❤️ + Jac + AI</div>
+      <div style="margin-top:4px;font-size:11px">Local dev UI</div>
+    </div>
   </div>
 
-  <script type="module" src="js/app.js"></script>
+  <!-- Main -->
+  <div class="main">
+
+    <!-- Topbar -->
+    <div class="topbar">
+      <h2 id="view-title">AI Companion</h2>
+    </div>
+
+    <!-- Content -->
+    <div class="content">
+
+      <!-- Chat Panel -->
+      <div id="chat-section" class="panel">
+        <h3>MindQuest Chat</h3>
+        <div id="chat-messages" class="chat-messages" style="max-height:400px;overflow-y:auto;margin-bottom:10px;"></div>
+
+        <div class="form-row">
+          <input type="text" id="chat-input" class="input" placeholder="Type your message…">
+          <button id="chat-send-btn" class="btn">Send</button>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+<script src="js/app.js"></script>
 </body>
 </html>

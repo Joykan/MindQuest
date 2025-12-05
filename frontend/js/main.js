@@ -480,3 +480,38 @@ document.querySelector('[data-tab="suggestions"]').addEventListener('click', () 
     }
 });
 
+// Chat to GPT endpoint
+document.getElementById('chat-send-btn').addEventListener('click', sendMessage);
+
+async function sendMessage() {
+    const input = document.getElementById('chat-input');
+    const message = input.value.trim();
+    if (!message) return;
+
+    addChatMessage('user', message);
+    input.value = '';
+    
+    try {
+        const response = await fetch('http://localhost:4000/api/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message })
+        });
+
+        const data = await response.json();
+        const reply = data.reply || "Oops! I couldn't think of a reply.";
+        addChatMessage('bot', reply);
+    } catch (err) {
+        addChatMessage('bot', 'Server error. Try again later.');
+        console.error(err);
+    }
+}
+
+function addChatMessage(sender, text) {
+    const chatMessages = document.getElementById('chat-messages');
+    const msgDiv = document.createElement('div');
+    msgDiv.className = `chat-message ${sender}`;
+    msgDiv.textContent = text;
+    chatMessages.appendChild(msgDiv);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+}
