@@ -1,5 +1,5 @@
-// Main application logic for MindQuest
-// Uses JacClient with Spawn() for all backend interactions
+import jacClient from './jacclient.js';
+import config from './config.js';
 
 const jacClient = new JacClient();
 let currentUserId = null;

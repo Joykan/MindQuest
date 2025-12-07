@@ -246,4 +246,17 @@ walker test_full_flow {
         report here;
     }
 }
+# Health check walker
+walker health_check {
+    has status: str = "healthy";
+    
+    can check with entry {
+        report {
+            "status": self.status,
+            "timestamp": datetime.now().isoformat(),
+            "version": "1.0.0",
+            "service": "MindQuest API"
+        };
+    }
+}
 

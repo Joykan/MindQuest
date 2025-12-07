@@ -1,229 +1,219 @@
-// Jac Client - Wrapper for Jaseci API calls using Spawn()
-// This file provides a client interface to interact with Jaseci backend walkers
+import config from './config.js';
 
+/**
+ * Enhanced Jac Client with error handling, retry logic, and analytics
+ */
 class JacClient {
-    constructor(baseUrl = 'http://localhost:8000') {
-        this.baseUrl = baseUrl;
-        this.graphId = null;
-        this.userId = null;
+  constructor() {
+    this.baseUrl = config.apiUrl;
+    this.timeout = config.apiTimeout;
+    this.retryAttempts = config.retryAttempts;
+    this.headers = {
+      'Content-Type': 'application/json'
+    };
+  }
+
+  setAuthToken(token) {
+    if (token) {
+      this.headers['Authorization'] = `Bearer ${token}`;
+    } else {
+      delete this.headers['Authorization'];
     }
+  }
 
-    // Initialize connection and get graph ID
-    async init() {
-        try {
-            // Connect to Jaseci API
-            const response = await fetch(`${this.baseUrl}/js/walker_run`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `token ${this.getToken()}`
-                },
-                body: JSON.stringify({
-                    name: 'init',
-                    ctx: {},
-                    nd: 'root'
-                })
-            });
+  async spawn(walkerName, data = {}, options = {}) {
+    const {
+      retries = this.retryAttempts,
+      timeout = this.timeout,
+      onProgress = null,
+      errorHandler = null
+    } = options;
 
-            const data = await response.json();
-            if (data.report && data.report.length > 0) {
-                this.graphId = data.report[0].jid || data.report[0].id;
-                return { success: true, graphId: this.graphId };
-            }
-            return { success: false, error: 'Failed to initialize' };
-        } catch (error) {
-            console.error('Init error:', error);
-            return { success: false, error: error.message };
+    let lastError;
+    
+    for (let attempt = 0; attempt <= retries; attempt++) {
+      try {
+        if (attempt > 0 && onProgress) {
+          onProgress(`Retrying... (${attempt}/${retries})`);
         }
-    }
 
-    // Spawn a walker (core Jac Client functionality)
-    async spawn(walkerName, context = {}) {
-        try {
-            const response = await fetch(`${this.baseUrl}/js/walker_run`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `token ${this.getToken()}`
-                },
-                body: JSON.stringify({
-                    name: walkerName,
-                    ctx: context,
-                    nd: this.graphId || 'root',
-                    snt: 'active:graph'
-                })
-            });
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), timeout);
 
-            const data = await response.json();
-            return {
-                success: true,
-                report: data.report || [],
-                final_node: data.final_node
-            };
-        } catch (error) {
-            console.error(`Spawn error for ${walkerName}:`, error);
-            return { success: false, error: error.message };
-        }
-    }
-
-    // Create user
-    async createUser(name, email, preferences = {}) {
-        const result = await this.spawn('api_create_user', {
-            name: name,
-            email: email,
-            preferences: JSON.stringify(preferences)
+        const response = await fetch(`${this.baseUrl}/walker/${walkerName}`, {
+          method: 'POST',
+          headers: this.headers,
+          body: JSON.stringify(data),
+          signal: controller.signal
         });
 
-        if (result.success && result.report.length > 0) {
-            this.userId = result.report[0].jid || result.report[0].id;
-            return { success: true, userId: this.userId, user: result.report[0] };
-        }
-        return { success: false, error: 'Failed to create user' };
-    }
+        clearTimeout(timeoutId);
 
-    // Log mood using Spawn()
-    async logMood(emotionName, intensity, notes = '', moodCategory) {
-        if (!this.userId) {
-            return { success: false, error: 'User not created' };
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(
+            errorData.message || `HTTP error! status: ${response.status}`
+          );
         }
 
-        return await this.spawn('api_log_mood', {
-            user_id: this.userId,
-            emotion_name: emotionName,
-            intensity: intensity,
-            notes: notes,
-            mood_category: moodCategory
-        });
-    }
-
-    // Get emotion history
-    async getEmotions(days = 7) {
-        if (!this.userId) {
-            return { success: false, error: 'User not created' };
+        const result = await response.json();
+        
+        // Log successful interaction for AI training
+        if (config.enableTraining && config.enableAnalytics) {
+          this.logInteraction(walkerName, data, result, true);
         }
+        
+        return result;
 
-        return await this.spawn('api_get_emotions', {
-            user_id: this.userId,
-            days: days
-        });
-    }
-
-    // Log activity
-    async logActivity(activityName, category, duration, effectivenessRating) {
-        if (!this.userId) {
-            return { success: false, error: 'User not created' };
+      } catch (error) {
+        lastError = error;
+        
+        if (error.name === 'AbortError') {
+          throw new Error('Request timeout');
         }
-
-        return await this.spawn('api_log_activity', {
-            user_id: this.userId,
-            activity_name: activityName,
-            category: category,
-            duration: duration,
-            effectiveness_rating: effectivenessRating
-        });
-    }
-
-    // Create journal entry
-    async createJournalEntry(content, entryType = 'freeform', emotionalTags = []) {
-        if (!this.userId) {
-            return { success: false, error: 'User not created' };
+        
+        if (error.message.includes('4')) {
+          throw error;
         }
-
-        return await this.spawn('api_create_journal', {
-            user_id: this.userId,
-            content: content,
-            entry_type: entryType,
-            emotional_tags: JSON.stringify(emotionalTags)
-        });
-    }
-
-    // Get insights
-    async getInsights() {
-        if (!this.userId) {
-            return { success: false, error: 'User not created' };
+        
+        if (attempt < retries) {
+          await this.sleep(Math.pow(2, attempt) * 1000);
         }
-
-        return await this.spawn('api_get_insights', {
-            user_id: this.userId
-        });
+      }
     }
 
-    // Analyze patterns
-    async analyzePatterns(timePeriod = 'weekly') {
-        if (!this.userId) {
-            return { success: false, error: 'User not created' };
+    console.error(`Failed to call walker ${walkerName} after ${retries} retries:`, lastError);
+    
+    if (config.enableTraining && config.enableAnalytics) {
+      this.logInteraction(walkerName, data, null, false, lastError.message);
+    }
+    
+    if (errorHandler) {
+      errorHandler(lastError);
+    }
+    
+    throw lastError;
+  }
+
+  async logInteraction(walkerName, input, output, success, errorMsg = null) {
+    try {
+      if (walkerName === 'api_log_interaction') return;
+
+      const interactionData = {
+        walker: walkerName,
+        timestamp: new Date().toISOString(),
+        success: success,
+        anonymized_input: this.anonymizeData(input),
+        has_output: !!output,
+        error: errorMsg
+      };
+
+      fetch(`${this.baseUrl}/walker/api_log_interaction`, {
+        method: 'POST',
+        headers: this.headers,
+        body: JSON.stringify(interactionData),
+        keepalive: true
+      }).catch(() => {
+        if (config.isDevelopment) {
+          console.debug('Analytics logging failed');
         }
-
-        return await this.spawn('api_analyze_patterns', {
-            user_id: this.userId,
-            time_period: timePeriod
-        });
+      });
+    } catch (error) {
+      if (config.isDevelopment) {
+        console.debug('Analytics logging error:', error);
+      }
     }
+  }
 
-    // Get support and suggestions
-    async getSupport(supportRequest) {
-        if (!this.userId) {
-            return { success: false, error: 'User not created' };
-        }
+  anonymizeData(data) {
+    if (!data) return {};
+    
+    const sanitized = { ...data };
+    
+    const piiFields = ['email', 'name', 'phone', 'address', 'user_id'];
+    piiFields.forEach(field => {
+      if (sanitized[field]) {
+        sanitized[field] = this.hashString(sanitized[field]);
+      }
+    });
+    
+    return {
+      emotion: sanitized.emotion,
+      intensity_range: sanitized.intensity ? this.bucketIntensity(sanitized.intensity) : null,
+      has_notes: !!sanitized.notes,
+      timestamp_bucket: this.bucketTimestamp(new Date())
+    };
+  }
 
-        return await this.spawn('api_get_support', {
-            user_id: this.userId,
-            support_request: supportRequest
-        });
+  hashString(str) {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+      const char = str.charCodeAt(i);
+      hash = ((hash << 5) - hash) + char;
+      hash = hash & hash;
     }
+    return `anon_${Math.abs(hash)}`;
+  }
 
-    // Get suggestions
-    async getSuggestions(suggestionType = 'all') {
-        if (!this.userId) {
-            return { success: false, error: 'User not created' };
-        }
+  bucketIntensity(intensity) {
+    if (intensity <= 3) return 'low';
+    if (intensity <= 7) return 'medium';
+    return 'high';
+  }
 
-        return await this.spawn('api_get_suggestions', {
-            user_id: this.userId,
-            suggestion_type: suggestionType
-        });
+  bucketTimestamp(date) {
+    return `${date.getHours()}:00`;
+  }
+
+  async healthCheck() {
+    try {
+      const response = await fetch(`${this.baseUrl}/walker/health_check`, {
+        method: 'POST',
+        headers: this.headers,
+        body: JSON.stringify({})
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        return { healthy: true, data };
+      }
+      return { healthy: false, error: `Status: ${response.status}` };
+    } catch (error) {
+      return { healthy: false, error: error.message };
     }
+  }
 
-    // Get emotion summary
-    async getEmotionSummary(days = 7) {
-        if (!this.userId) {
-            return { success: false, error: 'User not created' };
-        }
+  async batchSpawn(requests) {
+    const promises = requests.map(({ walker, data, options }) =>
+      this.spawn(walker, data, options).catch(error => ({ error: error.message }))
+    );
+    return Promise.all(promises);
+  }
 
-        return await this.spawn('api_get_emotion_summary', {
-            user_id: this.userId,
-            days: days
-        });
+  sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
+  async getStatus() {
+    try {
+      const health = await this.healthCheck();
+      return {
+        ...health,
+        baseUrl: this.baseUrl,
+        timestamp: new Date().toISOString()
+      };
+    } catch (error) {
+      return {
+        healthy: false,
+        error: error.message,
+        baseUrl: this.baseUrl,
+        timestamp: new Date().toISOString()
+      };
     }
-
-    // Get or create token (for demo purposes)
-    getToken() {
-        let token = localStorage.getItem('jaseci_token');
-        if (!token) {
-            // In production, this should be obtained through proper authentication
-            token = 'demo_token';
-            localStorage.setItem('jaseci_token', token);
-        }
-        return token;
-    }
-
-    // Set user ID
-    setUserId(userId) {
-        this.userId = userId;
-        localStorage.setItem('mindquest_user_id', userId);
-    }
-
-    // Get saved user ID
-    getUserId() {
-        if (!this.userId) {
-            this.userId = localStorage.getItem('mindquest_user_id');
-        }
-        return this.userId;
-    }
+  }
 }
 
-// Export for use in other files
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = JacClient;
-}
+const jacClient = new JacClient();
 
+export default jacClient;
+export { JacClient };

@@ -1,64 +1,852 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>MindQuest - AI Companion</title>
-  <link rel="stylesheet" href="styles.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MindQuest - Your AI Mental Wellbeing Companion</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --secondary: #8b5cf6;
+            --accent: #ec4899;
+            --bg-dark: #0f172a;
+            --bg-darker: #020617;
+            --text-light: #f1f5f9;
+            --text-gray: #94a3b8;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: var(--bg-darker);
+            color: var(--text-light);
+            overflow-x: hidden;
+            line-height: 1.6;
+        }
+
+        /* Animated background gradient */
+        .gradient-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background: linear-gradient(45deg, #6366f1, #8b5cf6, #ec4899, #f59e0b);
+            background-size: 400% 400%;
+            animation: gradientShift 15s ease infinite;
+            opacity: 0.15;
+        }
+
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* Floating particles */
+        .particle {
+            position: fixed;
+            width: 4px;
+            height: 4px;
+            background: var(--primary);
+            border-radius: 50%;
+            opacity: 0.3;
+            animation: float 20s infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0) translateX(0); }
+            33% { transform: translateY(-100vh) translateX(50px); }
+            66% { transform: translateY(-200vh) translateX(-50px); }
+        }
+
+        /* Navigation */
+        nav {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            padding: 1.5rem 5%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 1000;
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        nav.scrolled {
+            padding: 1rem 5%;
+            background: rgba(15, 23, 42, 0.95);
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .nav-links a {
+            color: var(--text-light);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s ease;
+            position: relative;
+        }
+
+        .nav-links a:after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--primary);
+            transition: width 0.3s ease;
+        }
+
+        .nav-links a:hover:after {
+            width: 100%;
+        }
+
+        .cta-btn {
+            padding: 0.8rem 1.8rem;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            border: none;
+            border-radius: 50px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .cta-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(99, 102, 241, 0.4);
+        }
+
+        /* Hero Section */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 6rem 5% 4rem;
+            position: relative;
+        }
+
+        .hero-content {
+            max-width: 1400px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem;
+            align-items: center;
+        }
+
+        .hero-text h1 {
+            font-size: 4rem;
+            font-weight: 900;
+            line-height: 1.1;
+            margin-bottom: 1.5rem;
+            background: linear-gradient(135deg, #ffffff, var(--text-gray));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: fadeInUp 0.8s ease;
+        }
+
+        .hero-text .gradient-text {
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero-text p {
+            font-size: 1.3rem;
+            color: var(--text-gray);
+            margin-bottom: 2.5rem;
+            animation: fadeInUp 0.8s ease 0.2s backwards;
+        }
+
+        .hero-buttons {
+            display: flex;
+            gap: 1.5rem;
+            animation: fadeInUp 0.8s ease 0.4s backwards;
+        }
+
+        .btn-secondary {
+            padding: 0.8rem 1.8rem;
+            background: transparent;
+            color: white;
+            border: 2px solid var(--primary);
+            border-radius: 50px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-secondary:hover {
+            background: var(--primary);
+            transform: translateY(-2px);
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Hero Visual */
+        .hero-visual {
+            position: relative;
+            animation: fadeInUp 0.8s ease 0.3s backwards;
+        }
+
+        .phone-mockup {
+            width: 100%;
+            max-width: 450px;
+            margin: 0 auto;
+            position: relative;
+            transform-style: preserve-3d;
+            animation: float-phone 6s ease-in-out infinite;
+        }
+
+        @keyframes float-phone {
+            0%, 100% { transform: translateY(0) rotateY(0deg); }
+            50% { transform: translateY(-20px) rotateY(5deg); }
+        }
+
+        .phone-frame {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(236, 72, 153, 0.2));
+            border-radius: 50px;
+            padding: 1.5rem;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.5);
+        }
+
+        .phone-screen {
+            background: var(--bg-dark);
+            border-radius: 35px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .screen-header {
+            padding: 2rem 1.5rem 1rem;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+        }
+
+        .screen-header h3 {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .screen-content {
+            padding: 1.5rem;
+        }
+
+        .mood-card {
+            background: rgba(99, 102, 241, 0.1);
+            border-radius: 20px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .mood-card:hover {
+            transform: translateX(10px);
+            border-color: var(--primary);
+        }
+
+        .emoji {
+            font-size: 2rem;
+            margin-right: 1rem;
+        }
+
+        /* Features Section */
+        .features {
+            padding: 8rem 5%;
+            position: relative;
+        }
+
+        .section-title {
+            text-align: center;
+            margin-bottom: 5rem;
+        }
+
+        .section-title h2 {
+            font-size: 3rem;
+            font-weight: 800;
+            margin-bottom: 1rem;
+        }
+
+        .section-title p {
+            font-size: 1.2rem;
+            color: var(--text-gray);
+        }
+
+        .features-grid {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2.5rem;
+        }
+
+        .feature-card {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(139, 92, 246, 0.1));
+            border-radius: 30px;
+            padding: 3rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.4s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .feature-card:before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+
+        .feature-card:hover:before {
+            opacity: 0.1;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(99, 102, 241, 0.3);
+            border-color: var(--primary);
+        }
+
+        .feature-icon {
+            font-size: 3rem;
+            margin-bottom: 1.5rem;
+            display: inline-block;
+            position: relative;
+            z-index: 1;
+        }
+
+        .feature-card h3 {
+            font-size: 1.6rem;
+            margin-bottom: 1rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .feature-card p {
+            color: var(--text-gray);
+            line-height: 1.8;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* How It Works */
+        .how-it-works {
+            padding: 8rem 5%;
+            background: linear-gradient(180deg, transparent, rgba(99, 102, 241, 0.05));
+        }
+
+        .steps {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .step {
+            display: flex;
+            gap: 3rem;
+            align-items: center;
+            margin-bottom: 5rem;
+            opacity: 0;
+            transform: translateX(-50px);
+            transition: all 0.6s ease;
+        }
+
+        .step.visible {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .step:nth-child(even) {
+            flex-direction: row-reverse;
+            transform: translateX(50px);
+        }
+
+        .step:nth-child(even).visible {
+            transform: translateX(0);
+        }
+
+        .step-number {
+            font-size: 5rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            min-width: 100px;
+        }
+
+        .step-content h3 {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        .step-content p {
+            color: var(--text-gray);
+            font-size: 1.1rem;
+        }
+
+        /* Stats Section */
+        .stats {
+            padding: 6rem 5%;
+            text-align: center;
+        }
+
+        .stats-grid {
+            max-width: 1000px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 3rem;
+        }
+
+        .stat-item {
+            position: relative;
+        }
+
+        .stat-number {
+            font-size: 3.5rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            color: var(--text-gray);
+            font-size: 1.1rem;
+        }
+
+        /* CTA Section */
+        .cta-section {
+            padding: 8rem 5%;
+            text-align: center;
+            position: relative;
+        }
+
+        .cta-box {
+            max-width: 800px;
+            margin: 0 auto;
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(236, 72, 153, 0.2));
+            border-radius: 40px;
+            padding: 5rem 3rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+        }
+
+        .cta-box h2 {
+            font-size: 3rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .cta-box p {
+            font-size: 1.2rem;
+            color: var(--text-gray);
+            margin-bottom: 2.5rem;
+        }
+
+        /* Footer */
+        footer {
+            padding: 4rem 5% 2rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 3rem;
+            margin-bottom: 3rem;
+        }
+
+        .footer-section h4 {
+            font-size: 1.2rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .footer-section ul {
+            list-style: none;
+        }
+
+        .footer-section ul li {
+            margin-bottom: 0.8rem;
+        }
+
+        .footer-section a {
+            color: var(--text-gray);
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .footer-section a:hover {
+            color: var(--primary);
+        }
+
+        .footer-bottom {
+            text-align: center;
+            padding-top: 2rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            color: var(--text-gray);
+        }
+
+        /* Responsive */
+        @media (max-width: 968px) {
+            .hero-content {
+                grid-template-columns: 1fr;
+                text-align: center;
+            }
+
+            .hero-text h1 {
+                font-size: 3rem;
+            }
+
+            .hero-buttons {
+                justify-content: center;
+            }
+
+            .phone-mockup {
+                max-width: 350px;
+            }
+
+            .nav-links {
+                display: none;
+            }
+
+            .step {
+                flex-direction: column !important;
+                text-align: center;
+            }
+
+            .step-number {
+                min-width: auto;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .hero-text h1 {
+                font-size: 2.5rem;
+            }
+
+            .hero-text p {
+                font-size: 1.1rem;
+            }
+
+            .section-title h2 {
+                font-size: 2rem;
+            }
+
+            .hero-buttons {
+                flex-direction: column;
+            }
+        }
+    </style>
 </head>
 <body>
+    <!-- Animated Background -->
+    <div class="gradient-bg"></div>
+    
+    <!-- Floating Particles -->
+    <div class="particle" style="left: 10%; animation-delay: 0s;"></div>
+    <div class="particle" style="left: 20%; animation-delay: 2s;"></div>
+    <div class="particle" style="left: 30%; animation-delay: 4s;"></div>
+    <div class="particle" style="left: 40%; animation-delay: 6s;"></div>
+    <div class="particle" style="left: 50%; animation-delay: 8s;"></div>
+    <div class="particle" style="left: 60%; animation-delay: 10s;"></div>
+    <div class="particle" style="left: 70%; animation-delay: 12s;"></div>
+    <div class="particle" style="left: 80%; animation-delay: 14s;"></div>
+    <div class="particle" style="left: 90%; animation-delay: 16s;"></div>
 
-<div id="app" class="app">
-
-  <!-- Sidebar -->
-  <div class="sidebar">
-    <div class="brand">
-      <div class="logo">🧠</div>
-      <div>
-        <h1>MindQuest</h1>
-        <p class="small-muted" style="margin:0;font-size:11px">AI Mental Health Companion</p>
-      </div>
-    </div>
-
-    <div class="nav">
-      <button class="nav-btn active" data-view="chat">Chat</button>
-      <button class="nav-btn" data-view="placeholder-moods" disabled>📊 Mood Logs</button>
-      <button class="nav-btn" data-view="placeholder-profile" disabled>👤 Profile</button>
-    </div>
-
-    <div class="sidebar-foot">
-      <div>Made with ❤️ + Jac + AI</div>
-      <div style="margin-top:4px;font-size:11px">Local dev UI</div>
-    </div>
-  </div>
-
-  <!-- Main -->
-  <div class="main">
-
-    <!-- Topbar -->
-    <div class="topbar">
-      <h2 id="view-title">AI Companion</h2>
-    </div>
-
-    <!-- Content -->
-    <div class="content">
-
-      <!-- Chat Panel -->
-      <div id="chat-section" class="panel">
-        <h3>MindQuest Chat</h3>
-        <div id="chat-messages" class="chat-messages" style="max-height:400px;overflow-y:auto;margin-bottom:10px;"></div>
-
-        <div class="form-row">
-          <input type="text" id="chat-input" class="input" placeholder="Type your message…">
-          <button id="chat-send-btn" class="btn">Send</button>
+    <!-- Navigation -->
+    <nav id="nav">
+        <div class="logo">🧠 MindQuest</div>
+        <div class="nav-links">
+            <a href="#features">Features</a>
+            <a href="#how-it-works">How It Works</a>
+            <a href="#about">About</a>
+            <a href="https://github.com/Joykan/MindQuest" class="cta-btn">Get Started</a>
         </div>
-      </div>
+    </nav>
 
-    </div>
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-content">
+            <div class="hero-text">
+                <h1>Your <span class="gradient-text">AI-Powered</span> Mental Wellbeing Companion</h1>
+                <p>Track your moods, discover patterns, and receive personalized insights powered by advanced AI technology. Built with Jaseci's cutting-edge OSP architecture.</p>
+                <div class="hero-buttons">
+                    <button class="cta-btn" onclick="window.open('https://github.com/Joykan/MindQuest', '_blank')">Start Your Journey</button>
+                    <button class="btn-secondary" onclick="document.querySelector('#features').scrollIntoView({behavior: 'smooth'})">Learn More</button>
+                </div>
+            </div>
+            <div class="hero-visual">
+                <div class="phone-mockup">
+                    <div class="phone-frame">
+                        <div class="phone-screen">
+                            <div class="screen-header">
+                                <h3>Today's Mood</h3>
+                                <p style="opacity: 0.8;">Track your emotional journey</p>
+                            </div>
+                            <div class="screen-content">
+                                <div class="mood-card">
+                                    <span class="emoji">😊</span>
+                                    <span>Happy - Intensity: 8/10</span>
+                                </div>
+                                <div class="mood-card">
+                                    <span class="emoji">🎯</span>
+                                    <span>Focused - Intensity: 7/10</span>
+                                </div>
+                                <div class="mood-card">
+                                    <span class="emoji">💪</span>
+                                    <span>Energized - Intensity: 9/10</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
 
-  </div>
+    <!-- Features Section -->
+    <section class="features" id="features">
+        <div class="section-title">
+            <h2>Powerful Features for Your Mental Wellness</h2>
+            <p>Everything you need to understand and improve your emotional wellbeing</p>
+        </div>
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon">📊</div>
+                <h3>Smart Mood Tracking</h3>
+                <p>Log your emotions with intensity levels and notes. Our AI analyzes patterns over time to help you understand your emotional landscape.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🧠</div>
+                <h3>AI-Powered Insights</h3>
+                <p>Advanced multi-agent system analyzes your data to generate personalized insights and actionable recommendations for your mental health journey.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🎯</div>
+                <h3>Trigger Identification</h3>
+                <p>Discover what triggers your emotional responses. Our correlation analysis helps you understand cause-and-effect patterns in your mood.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">💬</div>
+                <h3>Empathetic Companion</h3>
+                <p>Receive warm, supportive responses powered by byLLM. Get personalized coping strategies, breathing exercises, and journaling prompts.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">📝</div>
+                <h3>Secure Journaling</h3>
+                <p>Private journal entries with emotional tagging and AI-generated writing prompts to help you process your thoughts and feelings.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">📈</div>
+                <h3>Activity Impact Analysis</h3>
+                <p>Track activities and understand how they influence your emotional state. Optimize your daily routine for better mental health.</p>
+            </div>
+        </div>
+    </section>
 
-</div>
+    <!-- How It Works -->
+    <section class="how-it-works" id="how-it-works">
+        <div class="section-title">
+            <h2>How MindQuest Works</h2>
+            <p>Four simple steps to better mental wellbeing</p>
+        </div>
+        <div class="steps">
+            <div class="step">
+                <div class="step-number">01</div>
+                <div class="step-content">
+                    <h3>Track Your Emotions</h3>
+                    <p>Log your moods daily with our intuitive interface. Note intensity levels, triggers, and activities. The more you log, the better insights you'll receive.</p>
+                </div>
+            </div>
+            <div class="step">
+                <div class="step-number">02</div>
+                <div class="step-content">
+                    <h3>AI Analyzes Patterns</h3>
+                    <p>Our multi-agent AI system powered by Jaseci's OSP architecture analyzes your emotional data, detecting patterns, correlations, and trends you might miss.</p>
+                </div>
+            </div>
+            <div class="step">
+                <div class="step-number">03</div>
+                <div class="step-content">
+                    <h3>Receive Personalized Insights</h3>
+                    <p>Get actionable insights tailored to your unique emotional patterns. Understand what affects your mood and discover effective coping strategies.</p>
+                </div>
+            </div>
+            <div class="step">
+                <div class="step-number">04</div>
+                <div class="step-content">
+                    <h3>Improve Your Wellbeing</h3>
+                    <p>Apply insights to your daily life. Track progress over time and watch as you develop healthier emotional habits and better self-awareness.</p>
+                </div>
+            </div>
+        </div>
+    </section>
 
-<script src="js/app.js"></script>
+    <!-- Stats Section -->
+    <section class="stats">
+        <div class="section-title">
+            <h2>Built with Cutting-Edge Technology</h2>
+            <p>Powered by Jaseci's advanced AI architecture</p>
+        </div>
+        <div class="stats-grid">
+            <div class="stat-item">
+                <div class="stat-number">3</div>
+                <div class="stat-label">AI Agents Working for You</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">OSP</div>
+                <div class="stat-label">Graph-Based Architecture</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">24/7</div>
+                <div class="stat-label">Always Available Support</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">100%</div>
+                <div class="stat-label">Private & Secure</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta-section" id="about">
+        <div class="cta-box">
+            <h2>Start Your Mental Wellness Journey Today</h2>
+            <p>Join thousands taking control of their emotional wellbeing with AI-powered insights and personalized support.</p>
+            <button class="cta-btn" style="font-size: 1.1rem; padding: 1rem 2.5rem;" onclick="window.open('https://github.com/Joykan/MindQuest', '_blank')">Get Started Free</button>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-content">
+            <div class="footer-section">
+                <h4>🧠 MindQuest</h4>
+                <p style="color: var(--text-gray);">Your compassionate AI companion for mental wellbeing. Built with ❤️ using Jaseci and Jac programming language.</p>
+            </div>
+            <div class="footer-section">
+                <h4>Product</h4>
+                <ul>
+                    <li><a href="#features">Features</a></li>
+                    <li><a href="#how-it-works">How It Works</a></li>
+                    <li><a href="https://github.com/Joykan/MindQuest">Documentation</a></li>
+                    <li><a href="https://github.com/Joykan/MindQuest">GitHub</a></li>
+                </ul>
+            </div>
+            <div class="footer-section">
+                <h4>Technology</h4>
+                <ul>
+                    <li><a href="https://www.jaseci.org/">Jaseci</a></li>
+                    <li><a href="https://www.jac-lang.org/jac_book">Jac Language</a></li>
+                    <li><a href="#">byLLM Integration</a></li>
+                    <li><a href="#">OSP Architecture</a></li>
+                </ul>
+            </div>
+            <div class="footer-section">
+                <h4>Resources</h4>
+                <ul>
+                    <li><a href="#">Getting Started</a></li>
+                    <li><a href="#">API Documentation</a></li>
+                    <li><a href="#">Community</a></li>
+                    <li><a href="#">Support</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2025 MindQuest. Built for Jaseci AI Hackathon. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script>
+        // Scroll animations
+        const nav = document.getElementById('nav');
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 100) {
+                nav.classList.add('scrolled');
+            } else {
+                nav.classList.remove('scrolled');
+            }
+        });
+
+        // Intersection Observer for steps animation
+        const steps = document.querySelectorAll('.step');
+        const observerOptions = {
+            threshold: 0.3,
+            rootMargin: '0px 0px -100px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                }
+            });
+        }, observerOptions);
+
+        steps.forEach(step => observer.observe(step));
+
+        // Smooth scroll for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+    </script>
 </body>
 </html>
