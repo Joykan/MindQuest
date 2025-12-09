@@ -1,3 +1,12 @@
+# Environment variables
+.env
+.env.local
+.env.development
+.env.production
+.env.test
+backend/.env
+frontend/.env
+
 # Python
 __pycache__/
 *.py[cod]
@@ -40,13 +49,7 @@ yarn-debug.log*
 yarn-error.log*
 package-lock.json
 yarn.lock
-
-# Environment variables
-.env
-.env.local
-.env.development
-.env.production
-.env.test
+.pnpm-debug.log*
 
 # IDE
 .vscode/
@@ -54,6 +57,7 @@ yarn.lock
 *.swp
 *.swo
 *~
+.DS_Store
 
 # OS
 .DS_Store
@@ -64,9 +68,29 @@ Thumbs.db
 dist/
 build/
 .cache/
+*.min.js
+*.min.css
 
 # Vercel
 .vercel
 
 # Render
 .render/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Testing
+coverage/
+.nyc_output/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
