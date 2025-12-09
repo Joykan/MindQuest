@@ -1,85 +1,103 @@
+// api.js — MindQuest Backend (Express + Gemini API)
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
-import axios from "axios"; // Keep axios for REST calls
+import bodyParser from "body-parser";
 
 dotenv.config();
 
 const app = express();
 app.use(cors());
-app.use(express.json());
+app.use(bodyParser.json());
 
 const PORT = process.env.PORT || 4000;
-
-// ---- GEMINI CONFIG ----
+const PROVIDER = process.env.PROVIDER || "GEMINI";
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
-const GEMINI_MODEL = process.env.GEMINI_MODEL || "gemini-1.5-flash"; // gemini-1.5-flash is now preferred
 
-if (!GEMINI_API_KEY) {
-  console.error("❌ Missing GEMINI_API_KEY in .env");
-  process.exit(1);
-}
+// ---- Gemini client ----
+async function geminiChat(message) {
+  const url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=" + GEMINI_API_KEY;
+  const payload = {
+    contents: [
+      { parts: [{ text: message }] }
+    ]
+  };
 
-// Gemini REST endpoint
-const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`;
+  const res = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload)
+  });
 
-
-// ========== 💬 Chat With Gemini (REST Implementation) ==========
-async function chatWithGemini(message) {
+  const data = await res.json();
   try {
-    const response = await axios.post(
-      GEMINI_URL,
-      {
-        contents: [
-          {
-            parts: [{ text: message }],
-          },
-        ],
-      },
-      {
-        headers: { "Content-Type": "application/json" },
-      }
-    );
-
-    // Extract text safely
-    const reply =
-      response.data?.candidates?.[0]?.content?.parts?.[0]?.text ||
-      "I’m here, talk to me 😌";
-
-    return reply;
-  } catch (err) {
-    console.error("Gemini Error:", err.response?.data || err.message);
-    return "Something went wrong talking to Gemini 😭";
+    return data.candidates[0].content.parts[0].text;
+  } catch {
+    return "Sorry, the AI could not respond.";
   }
 }
 
-// ========== 🌐 API ROUTES ==========
+// ---- Memory mock (use DB later) ----
+const journalDB = {};
 
-// Chat route
-app.post("/chat", async (req, res) => {
-  const message = req.body.message;
+// ---- ROUTES ----
 
-  if (!message) {
-    return res.status(400).json({
-      error: "Message is required",
-    });
-  }
-
-  // Uses the REST function
-  const reply = await chatWithGemini(message); 
-  return res.json({ reply });
+// health check
+app.get("/health", (req, res) => {
+  res.status(200).json({ status: "ok" });
 });
 
-// Health check
-app.get("/", (req, res) => {
+// CHAT endpoint
+app.post("/api/chat", async (req, res) => {
+  try {
+    const { message } = req.body;
+    if (!message) return res.status(400).json({ error: "Message is required" });
+
+    let reply = "AI provider not configured.";
+    if (PROVIDER === "GEMINI") {
+      reply = await geminiChat(message);
+    }
+
+    res.json({ reply });
+  } catch (error) {
+    console.error("CHAT ERROR:", error);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+// CREATE JOURNAL endpoint
+app.post("/api/create_journal", (req, res) => {
+  const { user_id, content, entry_type, emotional_tags } = req.body;
+  if (!user_id || !content) {
+    return res.status(400).json({ error: "user_id and content required" });
+  }
+
+  if (!journalDB[user_id]) journalDB[user_id] = [];
+
+  const entry = {
+    content,
+    entry_type: entry_type || "general",
+    emotional_tags: emotional_tags || [],
+    timestamp: new Date().toISOString()
+  };
+
+  journalDB[user_id].push(entry);
+  res.json({ success: true, entry });
+});
+
+// GET INSIGHTS endpoint
+app.post("/api/get_insights", (req, res) => {
+  const { user_id } = req.body;
+  if (!user_id) return res.status(400).json({ error: "user_id required" });
+
+  const entries = journalDB[user_id] || [];
   res.json({
-    status: "MindQuest backend running",
-    provider: "Gemini (REST API)", // Updated provider name
-    model: GEMINI_MODEL,
+    entries_count: entries.length,
+    latest_entry: entries.at(-1) || null
   });
 });
 
-// Start server
-app.listen(PORT, () =>
-  console.log(`🚀 MindQuest Gemini API listening on port ${PORT}`)
-);
+// ---- START SERVER ----
+app.listen(PORT, () => {
+  console.log(`🚀 MindQuest API (provider=${PROVIDER}) running on port ${PORT}`);
+});
