@@ -1,39 +1,166 @@
 // frontend/js/app.js
-const API_BASE = (window.__API_BASE__ || '') || ''; // empty => same origin; change to deployed backend if needed
-const chatWindow = document.getElementById('chat-window');
-const input = document.getElementById('chat-input');
-const sendBtn = document.getElementById('send-btn');
+(() => {
+  // Config: default backend URL for local dev
+  const CONFIG = {
+    backendUrl: localStorage.getItem('MQ_BACKEND_URL') || 'http://localhost:4000'
+  };
 
-function append(msg, who='bot') {
-  const d = document.createElement('div');
-  d.style.marginBottom = '8px';
-  d.innerHTML = `<strong>${who === 'user' ? 'You' : 'MindQuest'}:</strong> ${msg}`;
-  chatWindow.appendChild(d);
-  chatWindow.scrollTop = chatWindow.scrollHeight;
-}
+  // DOM refs
+  const navBtns = document.querySelectorAll('.nav-btn');
+  const views = document.querySelectorAll('.view');
+  const viewTitle = document.getElementById('view-title');
+  const apiStatusEl = document.getElementById('api-status');
 
-sendBtn.onclick = async () => {
-  const text = input.value.trim();
-  if (!text) return;
-  append(text, 'user');
-  input.value = '';
-  append('…thinking', 'bot');
-  try {
-    const res = await fetch(API_BASE + '/api/chat', {
-      method: 'POST',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({message: text})
-    });
-    const data = await res.json();
-    // remove last '…thinking' message (simple)
-    chatWindow.lastChild.remove();
-    if (res.ok) {
-      append(data.reply || JSON.stringify(data));
-    } else {
-      append('Error: ' + (data?.details || data?.error || JSON.stringify(data)));
-    }
-  } catch (e) {
-    chatWindow.lastChild.remove();
-    append('Network error: ' + e.message);
+  const chatMessages = document.getElementById('chat-messages');
+  const userInput = document.getElementById('user-input');
+  const sendBtn = document.getElementById('send-btn');
+  const apiUrlInput = document.getElementById('api-url-input');
+  const saveApiBtn = document.getElementById('save-api-url');
+
+  const journalEntry = document.getElementById('journal-entry');
+  const saveJournalBtn = document.getElementById('save-journal');
+
+  const getInsightsBtn = document.getElementById('get-insights');
+  const insightsArea = document.getElementById('insights-area');
+
+  // init UI values
+  apiUrlInput.value = CONFIG.backendUrl;
+  setApiStatus('checking…');
+
+  // helpers
+  function setApiStatus(txt, ok = true) {
+    apiStatusEl.textContent = txt;
+    apiStatusEl.style.color = ok ? '#34d399' : '#f97316';
   }
-};
+
+  function switchView(name) {
+    navBtns.forEach(b => b.classList.toggle('active', b.dataset.view === name));
+    views.forEach(v => v.classList.toggle('active', v.id === `view-${name}`));
+    viewTitle.textContent = name.charAt(0).toUpperCase() + name.slice(1);
+  }
+
+  // add nav listeners
+  navBtns.forEach(b => b.addEventListener('click', () => switchView(b.dataset.view)));
+
+  // Save API URL
+  saveApiBtn.addEventListener('click', () => {
+    const v = apiUrlInput.value.trim();
+    if (!v) return alert('Enter backend URL (e.g. https://my-backend.onrender.com)');
+    CONFIG.backendUrl = v.replace(/\/+$/,''); // strip trailing slash
+    localStorage.setItem('MQ_BACKEND_URL', CONFIG.backendUrl);
+    checkApi();
+    alert('Saved backend URL: ' + CONFIG.backendUrl);
+  });
+
+  // Append message
+  function appendMessage(role, text) {
+    const el = document.createElement('div');
+    el.style.marginBottom = '8px';
+    el.style.padding = '8px';
+    el.style.borderRadius = '8px';
+    el.style.maxWidth = '88%';
+    if (role === 'user') {
+      el.style.marginLeft = 'auto';
+      el.style.background = 'linear-gradient(90deg,#063b2f,#065f46)';
+      el.style.color = '#d1fae5';
+    } else {
+      el.style.background = 'linear-gradient(90deg,#04283a,#073b5a)';
+      el.style.color = '#e6f7ff';
+    }
+    el.innerText = text;
+    chatMessages.appendChild(el);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+  }
+
+  // API call: send chat
+  async function sendChat(userText) {
+    if (!userText || !userText.trim()) return;
+    appendMessage('user', userText);
+    userInput.value = '';
+    setApiStatus('sending…');
+
+    try {
+      const res = await fetch(`${CONFIG.backendUrl}/api/chat`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ message: userText })
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(()=>({error:'unknown'}));
+        setApiStatus(`error: ${err?.error || res.statusText}`, false);
+        appendMessage('assistant', `Sorry — backend returned error: ${err?.error || res.statusText}`);
+        return;
+      }
+
+      const data = await res.json();
+      const reply = data.reply || data?.choices?.[0]?.text || JSON.stringify(data);
+      setApiStatus('online');
+      appendMessage('assistant', reply);
+    } catch (e) {
+      setApiStatus('offline', false);
+      appendMessage('assistant', `Network error: ${e.message || e}`);
+    }
+  }
+
+  // send button handlers
+  sendBtn.addEventListener('click', () => sendChat(userInput.value));
+  userInput.addEventListener('keydown', (ev) => {
+    if (ev.key === 'Enter' && !ev.shiftKey) {
+      ev.preventDefault();
+      sendChat(userInput.value);
+    }
+  });
+
+  // Journal save (uses backend endpoint if available)
+  saveJournalBtn.addEventListener('click', async () => {
+    const content = journalEntry.value.trim();
+    if (!content) return alert('Write something first');
+    appendMessage('user', `[journal] ${content.slice(0,80)}${content.length>80?'…':''}`);
+    try {
+      const res = await fetch(`${CONFIG.backendUrl}/api/create_journal`, {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ user_id: 'user_1', content })
+      });
+      const d = await res.json();
+      document.getElementById('journal-result').innerText = 'Saved ✓';
+      journalEntry.value = '';
+    } catch (e) {
+      document.getElementById('journal-result').innerText = 'Save failed: ' + (e.message||e);
+    }
+  });
+
+  // Insights
+  getInsightsBtn.addEventListener('click', async () => {
+    insightsArea.textContent = 'Analyzing…';
+    try {
+      const res = await fetch(`${CONFIG.backendUrl}/api/get_insights`, {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ user_id: 'user_1' })
+      });
+      const d = await res.json();
+      insightsArea.textContent = JSON.stringify(d, null, 2);
+    } catch (e) {
+      insightsArea.textContent = 'Error: ' + (e.message || e);
+    }
+  });
+
+  // Simple health check to display API status
+  async function checkApi() {
+    try {
+      const res = await fetch(`${CONFIG.backendUrl}/health`); // backend health endpoint (preferable)
+      if (res.ok) {
+        setApiStatus('online');
+        return true;
+      }
+      setApiStatus('offline', false);
+      return false;
+    } catch (e) {
+      setApiStatus('offline', false);
+      return false;
+    }
+  }
+
+  // initial check
+  checkApi();
+})();

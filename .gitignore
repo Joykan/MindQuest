@@ -1,34 +1,13 @@
-# Environment files
+# node
+node_modules/
+npm-debug.log
 .env
-.env.local
-.env.production
-*.env
-
-# Python
-__pycache__/
-*.py[cod]
-*$py.class
-*.so
-.Python
-venv/
-env/
-
-# Training data
-data/training/*.jsonl
-
-# Deployment
-.vercel
-.railway
-.backend_url
-
-# OS
 .DS_Store
-Thumbs.db
 
-# Logs
-*.log
-logs/
-backend/.env
-backend/.env
-.env
-*.env
+# python venvs
+venv/
+.venv/
+venv310/
+venv311/
+venv3*/
+*/venv/
