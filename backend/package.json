@@ -9,11 +9,12 @@
     "dev": "NODE_ENV=development nodemon api.js"
   },
   "dependencies": {
+    "@google/generative-ai": "^0.24.1",
     "cors": "^2.8.5",
     "dotenv": "^16.1.4",
     "express": "^4.18.2",
-    "openai": "^4.9.0",
-    "node-fetch": "^3.4.1"
+    "node-fetch": "^3.3.2",
+    "openai": "^4.9.0"
   },
   "devDependencies": {
     "nodemon": "^3.0.1"
