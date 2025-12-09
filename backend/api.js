@@ -52,6 +52,23 @@ async function chatWithGemini(message) {
     return "Something went wrong talking to Gemini 😭";
   }
 }
+// BEFORE (Likely OpenAI setup)
+// const { Configuration, OpenAIApi } = require("openai");
+// const config = new Configuration({ apiKey: process.env.OPENAI_API_KEY });
+// const aiClient = new OpenAIApi(config);
+
+// AFTER (Gemini Setup)
+const { GoogleGenerativeAI } = require("@google/generative-ai");
+
+// The SDK automatically looks for the GEMINI_API_KEY environment variable.
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY); 
+
+// You would then call the Gemini models:
+async function generate() {
+  const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash"});
+  const response = await model.generateContent("Your prompt here");
+  console.log(response.text);
+}
 
 
 // ========== 🌐 API ROUTES ==========
