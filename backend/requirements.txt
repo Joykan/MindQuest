@@ -1,0 +1,6 @@
+jaseci==1.4.0.0
+jaclang==0.6.1
+fastapi==0.99.0
+uvicorn==0.22.0
+httpx==0.24.1
+python-dotenv==1.0.0
