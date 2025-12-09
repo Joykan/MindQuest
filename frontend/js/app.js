@@ -1,8 +1,8 @@
 // frontend/js/app.js
 (() => {
-  // Config: default backend URL for local dev
+  // Config: default backend URL for production
   const CONFIG = {
-    backendUrl: localStorage.getItem('MQ_BACKEND_URL') || 'http://localhost:4000'
+    backendUrl: localStorage.getItem('MQ_BACKEND_URL') || 'https://mindquest-pxjz.onrender.com'
   };
 
   // DOM refs
@@ -24,11 +24,12 @@
   const insightsArea = document.getElementById('insights-area');
 
   // init UI values
-  apiUrlInput.value = CONFIG.backendUrl;
+  if (apiUrlInput) apiUrlInput.value = CONFIG.backendUrl;
   setApiStatus('checking…');
 
   // helpers
   function setApiStatus(txt, ok = true) {
+    if (!apiStatusEl) return;
     apiStatusEl.textContent = txt;
     apiStatusEl.style.color = ok ? '#34d399' : '#f97316';
   }
@@ -36,24 +37,27 @@
   function switchView(name) {
     navBtns.forEach(b => b.classList.toggle('active', b.dataset.view === name));
     views.forEach(v => v.classList.toggle('active', v.id === `view-${name}`));
-    viewTitle.textContent = name.charAt(0).toUpperCase() + name.slice(1);
+    if (viewTitle) viewTitle.textContent = name.charAt(0).toUpperCase() + name.slice(1);
   }
 
   // add nav listeners
   navBtns.forEach(b => b.addEventListener('click', () => switchView(b.dataset.view)));
 
   // Save API URL
-  saveApiBtn.addEventListener('click', () => {
-    const v = apiUrlInput.value.trim();
-    if (!v) return alert('Enter backend URL (e.g. https://my-backend.onrender.com)');
-    CONFIG.backendUrl = v.replace(/\/+$/,''); // strip trailing slash
-    localStorage.setItem('MQ_BACKEND_URL', CONFIG.backendUrl);
-    checkApi();
-    alert('Saved backend URL: ' + CONFIG.backendUrl);
-  });
+  if (saveApiBtn) {
+    saveApiBtn.addEventListener('click', () => {
+      const v = apiUrlInput.value.trim();
+      if (!v) return alert('Enter backend URL (e.g. https://my-backend.onrender.com)');
+      CONFIG.backendUrl = v.replace(/\/+$/,''); // strip trailing slash
+      localStorage.setItem('MQ_BACKEND_URL', CONFIG.backendUrl);
+      checkApi();
+      alert('Saved backend URL: ' + CONFIG.backendUrl);
+    });
+  }
 
   // Append message
   function appendMessage(role, text) {
+    if (!chatMessages) return;
     const el = document.createElement('div');
     el.style.marginBottom = '8px';
     el.style.padding = '8px';
@@ -76,7 +80,7 @@
   async function sendChat(userText) {
     if (!userText || !userText.trim()) return;
     appendMessage('user', userText);
-    userInput.value = '';
+    if (userInput) userInput.value = '';
     setApiStatus('sending…');
 
     try {
@@ -104,51 +108,61 @@
   }
 
   // send button handlers
-  sendBtn.addEventListener('click', () => sendChat(userInput.value));
-  userInput.addEventListener('keydown', (ev) => {
-    if (ev.key === 'Enter' && !ev.shiftKey) {
-      ev.preventDefault();
-      sendChat(userInput.value);
-    }
-  });
+  if (sendBtn) {
+    sendBtn.addEventListener('click', () => sendChat(userInput?.value || ''));
+  }
+  if (userInput) {
+    userInput.addEventListener('keydown', (ev) => {
+      if (ev.key === 'Enter' && !ev.shiftKey) {
+        ev.preventDefault();
+        sendChat(userInput.value);
+      }
+    });
+  }
 
   // Journal save (uses backend endpoint if available)
-  saveJournalBtn.addEventListener('click', async () => {
-    const content = journalEntry.value.trim();
-    if (!content) return alert('Write something first');
-    appendMessage('user', `[journal] ${content.slice(0,80)}${content.length>80?'…':''}`);
-    try {
-      const res = await fetch(`${CONFIG.backendUrl}/api/create_journal`, {
-        method:'POST', headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({ user_id: 'user_1', content })
-      });
-      const d = await res.json();
-      document.getElementById('journal-result').innerText = 'Saved ✓';
-      journalEntry.value = '';
-    } catch (e) {
-      document.getElementById('journal-result').innerText = 'Save failed: ' + (e.message||e);
-    }
-  });
+  if (saveJournalBtn) {
+    saveJournalBtn.addEventListener('click', async () => {
+      const content = journalEntry?.value.trim() || '';
+      if (!content) return alert('Write something first');
+      appendMessage('user', `[journal] ${content.slice(0,80)}${content.length>80?'…':''}`);
+      try {
+        const res = await fetch(`${CONFIG.backendUrl}/api/create_journal`, {
+          method:'POST', headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({ user_id: 'user_1', content })
+        });
+        const d = await res.json();
+        const resultEl = document.getElementById('journal-result');
+        if (resultEl) resultEl.innerText = 'Saved ✓';
+        if (journalEntry) journalEntry.value = '';
+      } catch (e) {
+        const resultEl = document.getElementById('journal-result');
+        if (resultEl) resultEl.innerText = 'Save failed: ' + (e.message||e);
+      }
+    });
+  }
 
   // Insights
-  getInsightsBtn.addEventListener('click', async () => {
-    insightsArea.textContent = 'Analyzing…';
-    try {
-      const res = await fetch(`${CONFIG.backendUrl}/api/get_insights`, {
-        method:'POST', headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({ user_id: 'user_1' })
-      });
-      const d = await res.json();
-      insightsArea.textContent = JSON.stringify(d, null, 2);
-    } catch (e) {
-      insightsArea.textContent = 'Error: ' + (e.message || e);
-    }
-  });
+  if (getInsightsBtn) {
+    getInsightsBtn.addEventListener('click', async () => {
+      if (insightsArea) insightsArea.textContent = 'Analyzing…';
+      try {
+        const res = await fetch(`${CONFIG.backendUrl}/api/get_insights`, {
+          method:'POST', headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({ user_id: 'user_1' })
+        });
+        const d = await res.json();
+        if (insightsArea) insightsArea.textContent = JSON.stringify(d, null, 2);
+      } catch (e) {
+        if (insightsArea) insightsArea.textContent = 'Error: ' + (e.message || e);
+      }
+    });
+  }
 
   // Simple health check to display API status
   async function checkApi() {
     try {
-      const res = await fetch(`${CONFIG.backendUrl}/health`); // backend health endpoint (preferable)
+      const res = await fetch(`${CONFIG.backendUrl}/health`);
       if (res.ok) {
         setApiStatus('online');
         return true;
