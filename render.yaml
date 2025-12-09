@@ -6,10 +6,14 @@ services:
     plan: free
     buildCommand: cd backend && npm install
     startCommand: cd backend && npm start
+    healthCheckPath: /health
     envVars:
       - key: PORT
         value: 4000
+      - key: NODE_ENV
+        value: production
       - key: PROVIDER
         value: GEMINI
       - key: GEMINI_API_KEY
         sync: false
+    autoDeploy: true
