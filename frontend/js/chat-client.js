@@ -1,4 +1,7 @@
 // frontend/js/chat-client.js
+// Use deployed backend URL
+const API_URL = 'https://mindquest-pxjz.onrender.com';
+
 const chatSendBtn = document.getElementById('send-btn') || document.getElementById('chat-send-btn') || null;
 const userInputEl = document.getElementById('user-input') || document.getElementById('chat-input') || null;
 const chatBox = document.getElementById('chat-box') || document.getElementById('chat-messages');
@@ -21,23 +24,32 @@ if (!chatSendBtn || !userInputEl || !chatBox) {
 
     appendMessage('user', message);
     userInputEl.value = '';
+    
     // show a placeholder waiting message
     const waitEl = document.createElement('div');
     waitEl.className = 'chat-line bot-msg';
     waitEl.innerHTML = `<strong>MindQuest:</strong> <em>thinking…</em>`;
+    waitEl.id = 'thinking-indicator';
     chatBox.appendChild(waitEl);
     chatBox.scrollTop = chatBox.scrollHeight;
 
     try {
-      const res = await fetch('/api/chat', {
+      const res = await fetch(`${API_URL}/api/chat`, {
         method: 'POST',
         headers: {'Content-Type':'application/json'},
         body: JSON.stringify({ message })
       });
-      const data = await res.json();
-      waitEl.remove();
+      
+      // Remove thinking indicator
+      document.getElementById('thinking-indicator')?.remove();
 
-      if (res.ok && data.reply) {
+      if (!res.ok) {
+        throw new Error(`HTTP error! status: ${res.status}`);
+      }
+
+      const data = await res.json();
+
+      if (data.reply) {
         appendMessage('bot', data.reply);
       } else {
         const errText = data?.error || data?.details || 'Unknown error';
@@ -45,8 +57,8 @@ if (!chatSendBtn || !userInputEl || !chatBox) {
       }
     } catch (err) {
       console.error("sendMessage error", err);
-      waitEl.remove();
-      appendMessage('bot', `Network error: ${err.message || err}`);
+      document.getElementById('thinking-indicator')?.remove();
+      appendMessage('bot', `Network error: ${err.message || err}. Please check if the API is running.`);
     }
   }
 
@@ -57,4 +69,6 @@ if (!chatSendBtn || !userInputEl || !chatBox) {
       sendMessage();
     }
   });
+  
+  console.log('Chat client initialized with API:', API_URL);
 }

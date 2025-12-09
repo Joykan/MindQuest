@@ -4,6 +4,9 @@ import config from './config.js';
 const jacClient = new JacClient();
 let currentUserId = null;
 
+// API Configuration
+const API_URL = config.API_URL || 'https://mindquest-pxjz.onrender.com';
+
 // Initialize app
 document.addEventListener('DOMContentLoaded', async () => {
     // Initialize Jac Client
@@ -23,6 +26,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     setupEventListeners();
     loadEmotionHistory();
+    checkApiStatus();
 });
 
 // Event Listeners
@@ -71,6 +75,41 @@ function setupEventListeners() {
         document.getElementById('support-input-container').classList.remove('hidden');
     });
     document.getElementById('submit-support-btn').addEventListener('click', getSupport);
+
+    // Chat
+    document.getElementById('chat-send-btn').addEventListener('click', sendMessage);
+    document.getElementById('chat-input').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            sendMessage();
+        }
+    });
+}
+
+// Check API Status
+async function checkApiStatus() {
+    try {
+        const response = await fetch(`${API_URL}/health`, {
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json' }
+        });
+        
+        if (response.ok) {
+            updateApiStatus('online');
+        } else {
+            updateApiStatus('offline');
+        }
+    } catch (error) {
+        updateApiStatus('offline');
+        console.error('API status check failed:', error);
+    }
+}
+
+function updateApiStatus(status) {
+    const statusEl = document.querySelector('.api-status-indicator');
+    if (statusEl) {
+        statusEl.textContent = `API: ${status}`;
+        statusEl.className = `api-status-indicator ${status}`;
+    }
 }
 
 // User Management
@@ -222,15 +261,38 @@ async function saveJournalEntry() {
     }
 
     showLoading(true);
-    const result = await jacClient.createJournalEntry(content, 'freeform', []);
+    
+    try {
+        // Use the API endpoint for journal creation
+        const response = await fetch(`${API_URL}/api/create_journal`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                user_id: currentUserId,
+                content: content,
+                entry_type: 'freeform',
+                emotional_tags: []
+            })
+        });
 
-    if (result.success) {
-        showMessage('Journal entry saved!', 'success');
-        document.getElementById('journal-entry').value = '';
-        loadJournalEntries();
-    } else {
-        showMessage(`Failed to save entry: ${result.error}`, 'error');
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        
+        if (data.success) {
+            showMessage('Journal entry saved!', 'success');
+            document.getElementById('journal-entry').value = '';
+            loadJournalEntries();
+        } else {
+            throw new Error(data.error || 'Failed to save entry');
+        }
+    } catch (error) {
+        showMessage(`Failed to save entry: ${error.message}`, 'error');
+        console.error('Journal save error:', error);
     }
+    
     showLoading(false);
 }
 
@@ -241,30 +303,77 @@ async function getJournalingPrompt() {
     }
 
     showLoading(true);
-    // Get current emotion for personalized prompt
-    const emotionsResult = await jacClient.getEmotions(1);
-    const latestEmotion = emotionsResult.report?.[0]?.emotions?.[0] || { name: 'neutral' };
+    
+    try {
+        // Use chat API to generate a journaling prompt
+        const response = await fetch(`${API_URL}/api/chat`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                message: 'Generate a thoughtful journaling prompt for someone looking to explore their emotions and mental wellbeing.' 
+            })
+        });
 
-    // Use Spawn() to get journaling prompt
-    const result = await jacClient.spawn('api_get_journaling_prompt', {
-        user_id: currentUserId,
-        emotional_state: latestEmotion.name || 'neutral'
-    });
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
 
-    if (result.success && result.report) {
-        const prompt = result.report[0]?.content || result.report[0]?.prompt || 
-                      'Write about what you\'re feeling right now.';
+        const data = await response.json();
+        const prompt = data.reply || 'Write about what you\'re feeling right now.';
+        
         document.getElementById('journal-entry').value = `Prompt: ${prompt}\n\n`;
         showMessage('Journaling prompt generated!', 'success');
-    } else {
+    } catch (error) {
         showMessage('Failed to generate prompt', 'error');
+        console.error('Prompt generation error:', error);
     }
+    
     showLoading(false);
 }
 
 async function loadJournalEntries() {
-    // Implementation to load and display journal entries
-    // This would require a corresponding backend walker
+    if (!currentUserId) return;
+    
+    showLoading(true);
+    
+    try {
+        const response = await fetch(`${API_URL}/api/get_insights`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ user_id: currentUserId })
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        
+        if (data.all_entries && data.all_entries.length > 0) {
+            displayJournalEntries(data.all_entries);
+        }
+    } catch (error) {
+        console.error('Failed to load journal entries:', error);
+    }
+    
+    showLoading(false);
+}
+
+function displayJournalEntries(entries) {
+    const container = document.getElementById('journal-history');
+    if (!container) return;
+    
+    container.innerHTML = '<h3>Recent Journal Entries</h3>';
+    
+    entries.slice(0, 5).forEach(entry => {
+        const entryDiv = document.createElement('div');
+        entryDiv.className = 'journal-entry';
+        entryDiv.innerHTML = `
+            <p class="journal-content">${entry.content}</p>
+            <span class="timestamp">${formatDate(entry.timestamp)}</span>
+        `;
+        container.appendChild(entryDiv);
+    });
 }
 
 // Insights
@@ -275,14 +384,27 @@ async function generateInsights() {
     }
 
     showLoading(true);
-    const result = await jacClient.getInsights();
+    
+    try {
+        const response = await fetch(`${API_URL}/api/get_insights`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ user_id: currentUserId })
+        });
 
-    if (result.success) {
-        displayInsights(result.report || []);
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        
+        displayInsights(data);
         showMessage('Insights generated!', 'success');
-    } else {
-        showMessage(`Failed to generate insights: ${result.error}`, 'error');
+    } catch (error) {
+        showMessage(`Failed to generate insights: ${error.message}`, 'error');
+        console.error('Insights error:', error);
     }
+    
     showLoading(false);
 }
 
@@ -293,37 +415,63 @@ async function analyzePatterns() {
     }
 
     showLoading(true);
-    const result = await jacClient.analyzePatterns('weekly');
+    
+    try {
+        // Use chat API to analyze patterns
+        const response = await fetch(`${API_URL}/api/chat`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                message: `Analyze my mental health patterns and provide insights on my emotional wellbeing trends.` 
+            })
+        });
 
-    if (result.success) {
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        
         showMessage('Pattern analysis completed!', 'success');
-        // Refresh insights after analysis
-        await generateInsights();
-    } else {
-        showMessage(`Failed to analyze patterns: ${result.error}`, 'error');
+        
+        // Display the analysis
+        const analysisDiv = document.createElement('div');
+        analysisDiv.className = 'insight-card';
+        analysisDiv.innerHTML = `
+            <h4>Pattern Analysis</h4>
+            <p>${data.reply}</p>
+        `;
+        
+        const container = document.getElementById('insights-content');
+        container.insertBefore(analysisDiv, container.firstChild);
+    } catch (error) {
+        showMessage(`Failed to analyze patterns: ${error.message}`, 'error');
+        console.error('Pattern analysis error:', error);
     }
+    
     showLoading(false);
 }
 
-function displayInsights(insights) {
+function displayInsights(data) {
     const container = document.getElementById('insights-content');
     container.innerHTML = '';
 
-    if (!insights || insights.length === 0) {
+    if (!data || data.entries_count === 0) {
         container.innerHTML = '<p>No insights available yet. Keep logging your moods to generate insights!</p>';
         return;
     }
 
-    insights.forEach(insight => {
-        const card = document.createElement('div');
-        card.className = 'insight-card';
-        card.innerHTML = `
-            <h4>${insight.type || 'Insight'}</h4>
-            <p>${insight.insight || insight.content || JSON.stringify(insight)}</p>
-            ${insight.recommendations ? `<p class="recommendations"><strong>Recommendations:</strong> ${insight.recommendations}</p>` : ''}
-        `;
-        container.appendChild(card);
-    });
+    const card = document.createElement('div');
+    card.className = 'insight-card';
+    card.innerHTML = `
+        <h4>Your Mental Health Summary</h4>
+        <p><strong>Total Entries:</strong> ${data.entries_count}</p>
+        ${data.latest_entry ? `
+            <p><strong>Latest Entry:</strong> ${formatDate(data.latest_entry.timestamp)}</p>
+            <p>${data.latest_entry.content}</p>
+        ` : ''}
+    `;
+    container.appendChild(card);
 }
 
 // Activities
@@ -372,18 +520,35 @@ async function getSupport() {
     }
 
     showLoading(true);
-    // Use Spawn() via JacClient to get support
-    const result = await jacClient.getSupport(supportRequest);
+    
+    try {
+        const response = await fetch(`${API_URL}/api/chat`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message: supportRequest })
+        });
 
-    if (result.success) {
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        
         showMessage('Support response generated!', 'success');
         document.getElementById('support-request').value = '';
         
-        // Load suggestions
-        await loadSuggestions();
-    } else {
-        showMessage(`Failed to get support: ${result.error}`, 'error');
+        // Display the support response
+        displaySuggestions([{
+            title: 'AI Support Response',
+            content: data.reply,
+            type: 'support',
+            priority: 'high'
+        }]);
+    } catch (error) {
+        showMessage(`Failed to get support: ${error.message}`, 'error');
+        console.error('Support error:', error);
     }
+    
     showLoading(false);
 }
 
@@ -408,7 +573,9 @@ function displaySuggestions(suggestions) {
         return;
     }
 
-    suggestions.forEach(suggestion => {
+    const suggestionsArray = Array.isArray(suggestions) ? suggestions : [suggestions];
+
+    suggestionsArray.forEach(suggestion => {
         const card = document.createElement('div');
         card.className = `suggestion-card ${suggestion.type || suggestion.suggestion_type || ''}`;
         card.innerHTML = `
@@ -421,6 +588,59 @@ function displaySuggestions(suggestions) {
         `;
         container.appendChild(card);
     });
+}
+
+// Chat functionality
+async function sendMessage() {
+    const input = document.getElementById('chat-input');
+    const message = input.value.trim();
+    if (!message) return;
+
+    addChatMessage('user', message);
+    input.value = '';
+    
+    // Show typing indicator
+    const typingDiv = document.createElement('div');
+    typingDiv.className = 'chat-message bot typing';
+    typingDiv.id = 'typing-indicator';
+    typingDiv.textContent = 'AI is typing...';
+    document.getElementById('chat-messages').appendChild(typingDiv);
+    
+    try {
+        const response = await fetch(`${API_URL}/api/chat`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message })
+        });
+
+        // Remove typing indicator
+        document.getElementById('typing-indicator')?.remove();
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        const reply = data.reply || "Oops! I couldn't think of a reply.";
+        addChatMessage('bot', reply);
+        
+        // Update API status
+        updateApiStatus('online');
+    } catch (err) {
+        document.getElementById('typing-indicator')?.remove();
+        addChatMessage('bot', `Network error: ${err.message}. Please check if the API is running.`);
+        console.error('Chat error:', err);
+        updateApiStatus('offline');
+    }
+}
+
+function addChatMessage(sender, text) {
+    const chatMessages = document.getElementById('chat-messages');
+    const msgDiv = document.createElement('div');
+    msgDiv.className = `chat-message ${sender}`;
+    msgDiv.textContent = text;
+    chatMessages.appendChild(msgDiv);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
 }
 
 // UI Helpers
@@ -438,15 +658,19 @@ function switchTab(tabName) {
 
 function showLoading(show) {
     const loading = document.getElementById('loading');
-    if (show) {
-        loading.classList.remove('hidden');
-    } else {
-        loading.classList.add('hidden');
+    if (loading) {
+        if (show) {
+            loading.classList.remove('hidden');
+        } else {
+            loading.classList.add('hidden');
+        }
     }
 }
 
 function showMessage(message, type = 'info') {
     const messagesContainer = document.getElementById('messages');
+    if (!messagesContainer) return;
+    
     const messageEl = document.createElement('div');
     messageEl.className = `message ${type}`;
     messageEl.textContent = message;
@@ -459,12 +683,17 @@ function showMessage(message, type = 'info') {
 
 function showUserStatus(message) {
     const status = document.getElementById('user-status');
-    status.textContent = message;
-    status.classList.remove('hidden');
+    if (status) {
+        status.textContent = message;
+        status.classList.remove('hidden');
+    }
 }
 
 function hideElement(elementId) {
-    document.getElementById(elementId).classList.add('hidden');
+    const element = document.getElementById(elementId);
+    if (element) {
+        element.classList.add('hidden');
+    }
 }
 
 function formatDate(timestamp) {
@@ -474,44 +703,11 @@ function formatDate(timestamp) {
 }
 
 // Auto-load suggestions on suggestions tab
-document.querySelector('[data-tab="suggestions"]').addEventListener('click', () => {
-    if (currentUserId) {
-        loadSuggestions();
-    }
-});
-
-// Chat to GPT endpoint
-document.getElementById('chat-send-btn').addEventListener('click', sendMessage);
-
-async function sendMessage() {
-    const input = document.getElementById('chat-input');
-    const message = input.value.trim();
-    if (!message) return;
-
-    addChatMessage('user', message);
-    input.value = '';
-    
-    try {
-        const response = await fetch('http://localhost:4000/api/chat', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ message })
-        });
-
-        const data = await response.json();
-        const reply = data.reply || "Oops! I couldn't think of a reply.";
-        addChatMessage('bot', reply);
-    } catch (err) {
-        addChatMessage('bot', 'Server error. Try again later.');
-        console.error(err);
-    }
-}
-
-function addChatMessage(sender, text) {
-    const chatMessages = document.getElementById('chat-messages');
-    const msgDiv = document.createElement('div');
-    msgDiv.className = `chat-message ${sender}`;
-    msgDiv.textContent = text;
-    chatMessages.appendChild(msgDiv);
-    chatMessages.scrollTop = chatMessages.scrollHeight;
+const suggestionsTab = document.querySelector('[data-tab="suggestions"]');
+if (suggestionsTab) {
+    suggestionsTab.addEventListener('click', () => {
+        if (currentUserId) {
+            loadSuggestions();
+        }
+    });
 }
