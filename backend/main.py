@@ -1,12 +1,10 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from jaseci.jsorc import JsOrc
-import uvicorn
+import google.generativeai as genai
 import os
 
 app = FastAPI()
 
-# Enable CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -15,14 +13,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Boot Jaseci engine
-orc = JsOrc()
-orc.register_std()
-orc.alias_register(name="root", kind="sentinel", auto=True)
-
-@app.get("/")
-def root():
-    return {"status": "MindQuest API running", "endpoints": ["GET /health", "POST /chat"]}
+# Configure Gemini
+genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
+model = genai.GenerativeModel("gemini-2.0-flash")
 
 @app.get("/health")
 def health():
@@ -31,9 +24,19 @@ def health():
 @app.post("/chat")
 def chat(payload: dict):
     message = payload.get("message", "")
-    out = orc.sentinel_run("companion.chat", ctx={"message": message})
-    return {"reply": out["report"][0]}
+
+    response = model.generate_content(
+        f"""
+        You are MindQuest AI, a cyber-themed Kenyan mental health companion.
+        Speak in a warm, practical tone mixing English, Sheng, and Gen Z slang.
+        Encourage mental wellness, be helpful, be uplifting, but keep things safe.
+        The user says: {message}
+        """
+    )
+
+    return {"reply": response.text}
+    
 
 if __name__ == "__main__":
+    import uvicorn
     uvicorn.run("main:app", host="0.0.0.0", port=int(os.getenv("PORT", 8000)))
-    
