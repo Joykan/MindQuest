@@ -1,12 +1,12 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from jaseci.jsci import JsOrc
+from jaseci.jsorc import JsOrc
 import uvicorn
 import os
 
 app = FastAPI()
 
-# Enable CORS for frontend
+# Enable CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -20,6 +20,10 @@ orc = JsOrc()
 orc.register_std()
 orc.alias_register(name="root", kind="sentinel", auto=True)
 
+@app.get("/")
+def root():
+    return {"status": "MindQuest API running", "endpoints": ["GET /health", "POST /chat"]}
+
 @app.get("/health")
 def health():
     return {"status": "Backend alive"}
@@ -32,3 +36,4 @@ def chat(payload: dict):
 
 if __name__ == "__main__":
     uvicorn.run("main:app", host="0.0.0.0", port=int(os.getenv("PORT", 8000)))
+    
