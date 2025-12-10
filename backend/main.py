@@ -13,7 +13,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Configure Gemini
 genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
 model = genai.GenerativeModel("gemini-2.0-flash")
 
@@ -24,7 +23,6 @@ def health():
 @app.post("/chat")
 def chat(payload: dict):
     message = payload.get("message", "")
-
     response = model.generate_content(
         f"""
         You are MindQuest AI, a cyber-themed Kenyan mental health companion.
@@ -33,10 +31,4 @@ def chat(payload: dict):
         The user says: {message}
         """
     )
-
     return {"reply": response.text}
-    
-
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run("main:app", host="0.0.0.0", port=int(os.getenv("PORT", 8000)))
