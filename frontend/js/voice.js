@@ -1,18 +1,17 @@
-function speak(text) {
+export function speak(text, lang) {
   if (!window.speechSynthesis) return;
   
   const utterance = new SpeechSynthesisUtterance(text);
   
-  // Optionally set language/accent
-  switch(currentLang) {
-    case LANGUAGES.EN:
+  switch(lang) {
+    case "english":
       utterance.lang = "en-US";
       break;
-    case LANGUAGES.SW:
-    case LANGUAGES.SH:
-      utterance.lang = "sw-KE";  // Kenyan Swahili accent
+    case "swahili":
+    case "sheng":
+      utterance.lang = "sw-KE";
       break;
   }
-  
+
   window.speechSynthesis.speak(utterance);
 }

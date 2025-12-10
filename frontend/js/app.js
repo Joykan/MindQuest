@@ -1,33 +1,30 @@
-// frontend/js/app.js
+import { LANGUAGES, responses } from "./lang.js";
+import { speak } from "./voice.js";
+
 (() => {
-  // Config: default backend URL for production
   const CONFIG = {
-    backendUrl: localStorage.getItem('MQ_BACKEND_URL') || 'https://mindquest-pxjz.onrender.com'
+    backendUrl: localStorage.getItem('MQ_BACKEND_URL') || 'https://mindquest-sjql.onrender.com'
   };
 
-  // DOM refs
+  // DOM references
   const navBtns = document.querySelectorAll('.nav-btn');
   const views = document.querySelectorAll('.view');
   const viewTitle = document.getElementById('view-title');
   const apiStatusEl = document.getElementById('api-status');
-
   const chatMessages = document.getElementById('chat-messages');
   const userInput = document.getElementById('user-input');
   const sendBtn = document.getElementById('send-btn');
   const apiUrlInput = document.getElementById('api-url-input');
   const saveApiBtn = document.getElementById('save-api-url');
-
   const journalEntry = document.getElementById('journal-entry');
   const saveJournalBtn = document.getElementById('save-journal');
-
   const getInsightsBtn = document.getElementById('get-insights');
   const insightsArea = document.getElementById('insights-area');
+  const langSelect = document.getElementById('langSelect');
 
-  // init UI values
-  if (apiUrlInput) apiUrlInput.value = CONFIG.backendUrl;
-  setApiStatus('checking…');
+  let currentLang = LANGUAGES.EN;
+  if (langSelect) currentLang = langSelect.value;
 
-  // helpers
   function setApiStatus(txt, ok = true) {
     if (!apiStatusEl) return;
     apiStatusEl.textContent = txt;
@@ -40,45 +37,31 @@
     if (viewTitle) viewTitle.textContent = name.charAt(0).toUpperCase() + name.slice(1);
   }
 
-  // add nav listeners
   navBtns.forEach(b => b.addEventListener('click', () => switchView(b.dataset.view)));
 
-  // Save API URL
   if (saveApiBtn) {
     saveApiBtn.addEventListener('click', () => {
       const v = apiUrlInput.value.trim();
-      if (!v) return alert('Enter backend URL (e.g. https://my-backend.onrender.com)');
-      CONFIG.backendUrl = v.replace(/\/+$/,''); // strip trailing slash
+      if (!v) return alert('Enter backend URL');
+      CONFIG.backendUrl = v.replace(/\/+$/,'');
       localStorage.setItem('MQ_BACKEND_URL', CONFIG.backendUrl);
       checkApi();
       alert('Saved backend URL: ' + CONFIG.backendUrl);
     });
   }
 
-  // Append message
   function appendMessage(role, text) {
     if (!chatMessages) return;
     const el = document.createElement('div');
-    el.style.marginBottom = '8px';
-    el.style.padding = '8px';
-    el.style.borderRadius = '8px';
-    el.style.maxWidth = '88%';
-    if (role === 'user') {
-      el.style.marginLeft = 'auto';
-      el.style.background = 'linear-gradient(90deg,#063b2f,#065f46)';
-      el.style.color = '#d1fae5';
-    } else {
-      el.style.background = 'linear-gradient(90deg,#04283a,#073b5a)';
-      el.style.color = '#e6f7ff';
-    }
+    el.classList.add('chat-bubble', role);
     el.innerText = text;
     chatMessages.appendChild(el);
     chatMessages.scrollTop = chatMessages.scrollHeight;
+    speak(responses[currentLang](text), currentLang);
   }
 
-  // API call: send chat
   async function sendChat(userText) {
-    if (!userText || !userText.trim()) return;
+    if (!userText?.trim()) return;
     appendMessage('user', userText);
     if (userInput) userInput.value = '';
     setApiStatus('sending…');
@@ -107,20 +90,11 @@
     }
   }
 
-  // send button handlers
-  if (sendBtn) {
-    sendBtn.addEventListener('click', () => sendChat(userInput?.value || ''));
-  }
-  if (userInput) {
-    userInput.addEventListener('keydown', (ev) => {
-      if (ev.key === 'Enter' && !ev.shiftKey) {
-        ev.preventDefault();
-        sendChat(userInput.value);
-      }
-    });
-  }
+  if (sendBtn) sendBtn.addEventListener('click', () => sendChat(userInput?.value || ''));
+  if (userInput) userInput.addEventListener('keydown', (ev) => {
+    if (ev.key === 'Enter' && !ev.shiftKey) { ev.preventDefault(); sendChat(userInput.value); }
+  });
 
-  // Journal save (uses backend endpoint if available)
   if (saveJournalBtn) {
     saveJournalBtn.addEventListener('click', async () => {
       const content = journalEntry?.value.trim() || '';
@@ -142,7 +116,6 @@
     });
   }
 
-  // Insights
   if (getInsightsBtn) {
     getInsightsBtn.addEventListener('click', async () => {
       if (insightsArea) insightsArea.textContent = 'Analyzing…';
@@ -159,22 +132,17 @@
     });
   }
 
-  // Simple health check to display API status
+  if (langSelect) {
+    langSelect.addEventListener('change', (e) => { currentLang = e.target.value; });
+  }
+
   async function checkApi() {
     try {
       const res = await fetch(`${CONFIG.backendUrl}/health`);
-      if (res.ok) {
-        setApiStatus('online');
-        return true;
-      }
-      setApiStatus('offline', false);
-      return false;
-    } catch (e) {
-      setApiStatus('offline', false);
-      return false;
-    }
+      if (res.ok) { setApiStatus('online'); return true; }
+      setApiStatus('offline', false); return false;
+    } catch (e) { setApiStatus('offline', false); return false; }
   }
 
-  // initial check
   checkApi();
 })();

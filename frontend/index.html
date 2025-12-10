@@ -37,14 +37,10 @@
           <h2 id="view-title">AI Companion</h2>
           <div class="small-muted">Chat safely about stress, feelings, and life stuff.</div>
         </div>
-        <div class="actions" style="display:flex;align-items:center;gap:8px">
+
+        <div class="actions">
           <input id="api-url-input" placeholder="Backend URL (for deploy)" />
           <button id="save-api-url" class="btn">Save</button>
-          <select id="langSelect">
-            <option value="english">English</option>
-            <option value="swahili">Kiswahili</option>
-            <option value="sheng">Sheng</option>
-          </select>
         </div>
       </header>
 
@@ -52,12 +48,27 @@
         <!-- Chat view -->
         <div id="view-chat" class="panel view active">
           <h3>MindQuest Chat</h3>
-          <div id="chatContainer" style="max-height:360px;overflow:auto;padding:8px;border-radius:10px;background:linear-gradient(180deg,rgba(255,255,255,0.02),transparent);margin-bottom:12px"></div>
+
+          <div id="chat-messages" class="chat-container" style="max-height:360px;overflow:auto;padding:8px;border-radius:10px;background:linear-gradient(180deg,rgba(255,255,255,0.02),transparent);margin-bottom:12px"></div>
+
           <div class="form-row" style="gap:8px">
             <input id="user-input" class="input" placeholder="Type your message…" />
             <button id="send-btn" class="btn">Send</button>
           </div>
-          <div id="chat-status" class="small-muted" style="margin-top:8px">API: <span id="api-status">not set</span></div>
+
+          <div id="chat-status" class="small-muted" style="margin-top:8px">
+            API: <span id="api-status">not set</span>
+          </div>
+
+          <!-- Language selector -->
+          <div style="margin-top:10px">
+            <label for="langSelect" class="small-muted">Language:</label>
+            <select id="langSelect">
+              <option value="english">English</option>
+              <option value="swahili">Kiswahili</option>
+              <option value="sheng">Sheng</option>
+            </select>
+          </div>
         </div>
 
         <!-- Journal view -->
@@ -80,7 +91,9 @@
     </main>
   </div>
 
-  <!-- Unified JS -->
-  <script type="module" src="js/main.bundle.js"></script>
+  <!-- Scripts -->
+  <script type="module" src="js/app.js"></script>
+  <script type="module" src="js/lang.js"></script>
+  <script type="module" src="js/voice.js"></script>
 </body>
 </html>
