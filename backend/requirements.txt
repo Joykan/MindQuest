@@ -1,6 +1,4 @@
-jaseci==1.4.0.0
-jaclang==0.6.1
-fastapi==0.99.0
-uvicorn==0.22.0
-httpx==0.24.1
-python-dotenv==1.0.0
+fastapi==0.124.0
+uvicorn==0.38.0
+google-generativeai==0.8.5
+python-dotenv==1.2.1
