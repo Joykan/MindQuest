@@ -37,10 +37,14 @@
           <h2 id="view-title">AI Companion</h2>
           <div class="small-muted">Chat safely about stress, feelings, and life stuff.</div>
         </div>
-
-        <div class="actions">
+        <div class="actions" style="display:flex;align-items:center;gap:8px">
           <input id="api-url-input" placeholder="Backend URL (for deploy)" />
           <button id="save-api-url" class="btn">Save</button>
+          <select id="langSelect">
+            <option value="english">English</option>
+            <option value="swahili">Kiswahili</option>
+            <option value="sheng">Sheng</option>
+          </select>
         </div>
       </header>
 
@@ -48,18 +52,15 @@
         <!-- Chat view -->
         <div id="view-chat" class="panel view active">
           <h3>MindQuest Chat</h3>
-
-          <div id="chat-messages" style="max-height:360px;overflow:auto;padding:8px;border-radius:10px;background:linear-gradient(180deg,rgba(255,255,255,0.02),transparent);margin-bottom:12px"></div>
-
+          <div id="chatContainer" style="max-height:360px;overflow:auto;padding:8px;border-radius:10px;background:linear-gradient(180deg,rgba(255,255,255,0.02),transparent);margin-bottom:12px"></div>
           <div class="form-row" style="gap:8px">
             <input id="user-input" class="input" placeholder="Type your message…" />
             <button id="send-btn" class="btn">Send</button>
           </div>
-
           <div id="chat-status" class="small-muted" style="margin-top:8px">API: <span id="api-status">not set</span></div>
         </div>
 
-        <!-- Journal view (minimal) -->
+        <!-- Journal view -->
         <div id="view-journal" class="panel view">
           <h3>Journal</h3>
           <textarea id="journal-entry" placeholder="Write your thoughts..." style="min-height:140px"></textarea>
@@ -67,7 +68,7 @@
           <div id="journal-result" class="small-muted" style="margin-top:8px"></div>
         </div>
 
-        <!-- Insights view (minimal) -->
+        <!-- Insights view -->
         <div id="view-insights" class="panel view">
           <h3>Insights</h3>
           <div style="margin-top:8px">
@@ -79,11 +80,7 @@
     </main>
   </div>
 
-  <script src="js/app.js"></script>
-  <select id="langSelect">
-  <option value="english">English</option>
-  <option value="swahili">Kiswahili</option>
-  <option value="sheng">Sheng</option>
-</select>
+  <!-- Unified JS -->
+  <script type="module" src="js/main.bundle.js"></script>
 </body>
 </html>
