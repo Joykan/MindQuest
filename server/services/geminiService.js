@@ -1,33 +1,38 @@
-import ai from '../config/geminiConfig.js'; // Import the initialized AI client
+import ai from "../config/geminiConfig.js";
 
 /**
- * Generates a response from the Gemini model while maintaining conversation history.
- * @param {Array<Object>} history - The full conversation history (user and model messages).
- * @returns {Promise<string>} The AI's text reply.
+ * history format:
+ * [
+ *   { role: "user", text: "Hello" },
+ *   { role: "model", text: "Hi, how can I help?" }
+ * ]
  */
-export const getAIResponse = async (history) => {
-  if (!Array.isArray(history) || history.length === 0) {
-    return "Please provide a valid conversation history.";
-  }
 
+export const getAIResponse = async (history) => {
   try {
-    // 1. Create a new chat session
-    const chat = ai.chats.create({
+    // Convert history to SDK format
+    const formattedHistory = history.map(h => ({
+      role: h.role,
+      parts: [{ text: h.text }]
+    }));
+
+    // Create chat session
+    const chat = ai.startChat({
       model: "gemini-1.5-flash",
-      // 2. Initialize the chat with the history of all PREVIOUS turns.
-      //    We slice off the last message, which is the user's *current* prompt.
-      history: history.slice(0, -1),
+      history: formattedHistory,
     });
 
-    // 3. Get the text of the latest user message
-    const latestUserMessage = history[history.length - 1].parts[0].text;
+    // Last user message
+    const latestUserMessage = history[history.length - 1].text;
 
-    // 4. Send the latest message as a string
-    const response = await chat.sendMessage({ message: latestUserMessage });
+    // Send message
+    const result = await chat.sendMessage(latestUserMessage);
 
-    return response?.text || "Sorry, I didn't understand that.";
+    const reply = result.response.text();
+
+    return reply || "AI didn't send any text.";
   } catch (err) {
     console.error("Gemini API error FULL:", err);
-    throw new Error("Oops, something went wrong with the AI.");
+    throw new Error("AI failed to respond.");
   }
 };
