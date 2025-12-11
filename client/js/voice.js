@@ -1,21 +1,18 @@
 // ===== js/voice.js =====
+const synth = typeof window !== "undefined" ? window.speechSynthesis : null;
 
-const synth = window.speechSynthesis;
-
-// Speak AI response
-export function speak(text, lang = "en-US") {
+export function speak(text, lang = "english") {
   if (!text || !synth) return;
 
   const utter = new SpeechSynthesisUtterance(text);
+  // simple mapping
+  if (lang === "swahili") utter.lang = "sw-KE";
+  else if (lang === "sheng") utter.lang = "en-US";
+  else utter.lang = "en-US";
 
-  // Language selection mapping
-  switch(lang) {
-    case "swahili": utter.lang = "sw-KE"; break;
-    case "sheng": utter.lang = "en-US"; break; // fallback
-    default: utter.lang = "en-US";
-  }
-
-  utter.rate = 1.0; // speed
-  utter.pitch = 1.2; // pitch for cyber effect
+  utter.rate = 1.0;
+  utter.pitch = 1.05;
+  // gentle volume ramp
+  utter.volume = 1.0;
   synth.speak(utter);
 }

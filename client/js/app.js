@@ -1,7 +1,8 @@
 // ===== js/app.js =====
 import { speak } from "./voice.js";
+import { translatePrompt } from "./lang.js";
 
-// Elements
+// DOM
 const chatMessages = document.getElementById("chat-messages");
 const userInput = document.getElementById("user-input");
 const sendBtn = document.getElementById("send-btn");
@@ -23,51 +24,48 @@ const langSelect = document.getElementById("langSelect");
 const navButtons = document.querySelectorAll(".nav-btn");
 const views = document.querySelectorAll(".view");
 
-// Default backend
-let API_CHAT = "http://localhost:5000/api/chat";
-let API_JOURNAL = "http://localhost:5000/api/create_journal";
-let API_INSIGHTS = "http://localhost:5000/api/get_insights";
+// Default backend (dev)
+let API_BASE = "http://localhost:5000";
+let API_CHAT = `${API_BASE}/api/chat`;
+let API_JOURNAL = `${API_BASE}/api/create_journal`;
+let API_INSIGHTS = `${API_BASE}/api/get_insights`;
 
-// -----------------
 // Navigation
-// -----------------
 navButtons.forEach(btn => {
   btn.addEventListener("click", () => {
     const target = btn.dataset.view;
     views.forEach(v => v.classList.remove("active"));
     document.getElementById("view-" + target).classList.add("active");
-
     navButtons.forEach(b => b.classList.remove("active"));
     btn.classList.add("active");
-
     document.getElementById("view-title").textContent = target.charAt(0).toUpperCase() + target.slice(1);
   });
 });
 
-// -----------------
 // Save API URL
-// -----------------
 saveApiBtn.addEventListener("click", () => {
   if (apiInput.value.trim() === "") return;
-  const base = apiInput.value.trim();
-  API_CHAT = `${base}/api/chat`;
-  API_JOURNAL = `${base}/api/create_journal`;
-  API_INSIGHTS = `${base}/api/get_insights`;
-  apiStatus.textContent = "set ✅";
+  API_BASE = apiInput.value.trim().replace(/\/$/, "");
+  API_CHAT = `${API_BASE}/api/chat`;
+  API_JOURNAL = `${API_BASE}/api/create_journal`;
+  API_INSIGHTS = `${API_BASE}/api/get_insights`;
+  apiStatus.textContent = `${API_BASE} ✅`;
 });
 
-// -----------------
-// Append Chat Message
-// -----------------
-function appendMessage(text, sender) {
+// Utils - append message
+function appendMessage(text, sender, opts = {}) {
   const div = document.createElement("div");
-  div.textContent = text;
   div.classList.add("chat-bubble", sender);
+  if (opts.html) div.innerHTML = text;
+  else div.textContent = text;
+  // subtle pulse
+  div.style.animation = "neonPulse 0.6s ease-out";
   chatMessages.appendChild(div);
   chatMessages.scrollTop = chatMessages.scrollHeight;
+  return div;
 }
 
-// Typing indicator
+// typing indicator
 function showTyping() {
   const div = document.createElement("div");
   div.classList.add("chat-bubble", "ai", "typing");
@@ -77,13 +75,9 @@ function showTyping() {
   return div;
 }
 
-// -----------------
-// Chat Send
-// -----------------
+// Send chat
 sendBtn.addEventListener("click", sendChat);
-userInput.addEventListener("keypress", (e) => {
-  if (e.key === "Enter") sendChat();
-});
+userInput.addEventListener("keypress", (e) => { if (e.key === "Enter") sendChat(); });
 
 async function sendChat() {
   const msg = userInput.value.trim();
@@ -91,32 +85,39 @@ async function sendChat() {
   appendMessage(msg, "user");
   userInput.value = "";
 
-  // Typing indicator
+  // show typing
   const typingDiv = showTyping();
+
+  // translate/pipeline (language)
+  const lang = langSelect.value || "english";
+  const prompt = translatePrompt(msg, lang);
 
   try {
     const res = await fetch(API_CHAT, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ message: msg, lang: langSelect.value })
+      body: JSON.stringify({ message: prompt, lang })
     });
     const data = await res.json();
     chatMessages.removeChild(typingDiv);
-    appendMessage(data.data?.reply || "AI didn't respond", "ai");
+
+    const reply = data?.data?.reply || data?.reply || "AI didn't respond";
+    appendMessage(reply, "ai");
+
+    // speak it
+    speak(reply, lang);
   } catch (err) {
-    chatMessages.removeChild(typingDiv);
+    if (typingDiv && typingDiv.parentNode) chatMessages.removeChild(typingDiv);
     appendMessage("Error connecting to backend", "ai");
-    console.error(err);
+    console.error("Chat error:", err);
   }
 }
 
-// -----------------
-// Journal Save
-// -----------------
+// Journal save
 saveJournalBtn.addEventListener("click", async () => {
   const text = journalEntry.value.trim();
   if (!text) return;
-
+  journalResult.textContent = "Saving…";
   try {
     const res = await fetch(API_JOURNAL, {
       method: "POST",
@@ -128,15 +129,13 @@ saveJournalBtn.addEventListener("click", async () => {
     journalEntry.value = "";
   } catch (err) {
     journalResult.textContent = "Error saving journal";
-    console.error(err);
+    console.error("Journal save error:", err);
   }
 });
 
-// -----------------
-// Insights Fetch
-// -----------------
+// Insights
 insightsBtn.addEventListener("click", async () => {
-  insightsArea.textContent = "Processing...";
+  insightsArea.textContent = "Processing…";
   try {
     const res = await fetch(API_INSIGHTS, {
       method: "POST",
@@ -144,9 +143,20 @@ insightsBtn.addEventListener("click", async () => {
       body: JSON.stringify({})
     });
     const data = await res.json();
-    insightsArea.textContent = JSON.stringify(data.data || "No insights yet", null, 2);
+    insightsArea.textContent = JSON.stringify(data.data || data || "No insights yet", null, 2);
   } catch (err) {
     insightsArea.textContent = "Error fetching insights";
-    console.error(err);
+    console.error("Insights error:", err);
   }
+});
+
+// small UX nicety: focus input on chat view
+document.querySelectorAll(".nav-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    setTimeout(() => {
+      const active = document.querySelector(".panel.view.active");
+      const input = active?.querySelector("input, textarea");
+      if (input) input.focus();
+    }, 120);
+  });
 });
