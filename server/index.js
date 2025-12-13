@@ -1,98 +1,127 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
-import mongoose from "mongoose";
 import path from "path";
 import { fileURLToPath } from "url";
+import fs from "fs";
 
-// ES modules fix for __dirname
+// ES modules fix
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 dotenv.config();
 
-// Import routes
-import mainRoutes from "./routes/index.js";
-
 const app = express();
+const PORT = process.env.PORT || 10000;  // CRITICAL: Render uses 10000
 
-// ==== MIDDLEWARE ====
-app.use(cors({
-  origin: process.env.NODE_ENV === 'production' 
-    ? process.env.FRONTEND_URL || 'https://mindquest-6ree.onrender.com'
-    : 'http://localhost:3000',
-  credentials: true
-}));
-app.use(express.json({ limit: "2mb" }));
-app.use(express.urlencoded({ extended: true }));
+// Middleware
+app.use(cors());
+app.use(express.json());
 
-// ==== SERVE STATIC FRONTEND FILES ====
-// This is what you're missing!
-const clientPath = path.join(__dirname, '..', 'client');
-console.log('🔍 Serving frontend from:', clientPath);
+// Log all requests
+app.use((req, res, next) => {
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
+  next();
+});
 
-// Serve static files (CSS, JS, images)
-app.use(express.static(clientPath));
+// Find client folder
+console.log("=== LOOKING FOR CLIENT FILES ===");
+console.log("Current dir:", __dirname);
+console.log("Process CWD:", process.cwd());
 
-// ==== DATABASE CONNECTION (Optional) ====
-if (process.env.MONGODB_URI) {
-  mongoose.connect(process.env.MONGODB_URI)
-    .then(() => console.log('✅ Connected to MongoDB'))
-    .catch(err => console.error('❌ MongoDB connection error:', err));
+const possiblePaths = [
+  path.join(process.cwd(), 'client'),
+  path.join(__dirname, '..', 'client'),
+  path.join(__dirname, 'client'),
+  '/opt/render/project/src/client',  // Render's typical path
+];
+
+let clientPath = null;
+for (const p of possiblePaths) {
+  console.log(`Checking: ${p}`);
+  try {
+    if (fs.existsSync(p) && fs.existsSync(path.join(p, 'index.html'))) {
+      clientPath = p;
+      console.log(`✅ FOUND CLIENT AT: ${p}`);
+      console.log(`📄 Files:`, fs.readdirSync(p));
+      break;
+    }
+  } catch (err) {
+    console.log(`❌ Error checking ${p}:`, err.message);
+  }
 }
 
-// ==== API ROUTES ====
-app.use("/api", mainRoutes);
+// Serve static files if found
+if (clientPath) {
+  app.use(express.static(clientPath));
+  console.log(`✅ Serving static files from: ${clientPath}`);
+} else {
+  console.error('❌ CLIENT FOLDER NOT FOUND ANYWHERE!');
+  console.error('Searched paths:', possiblePaths);
+}
 
-// ==== HEALTH ENDPOINTS ====
+// Health endpoint (MUST work)
 app.get("/health", (req, res) => {
-  res.status(200).json({ 
-    status: "OK", 
-    message: "Server is running",
-    timestamp: new Date().toISOString(),
+  res.json({
+    status: "OK",
+    service: "MindQuest AI",
+    port: PORT,
     clientPath: clientPath,
-    files: require('fs').readdirSync(clientPath)
-  });
-});
-
-app.get("/api/health", (req, res) => {
-  res.status(200).json({ 
-    status: "OK", 
-    message: "API is running",
+    clientExists: !!clientPath,
     timestamp: new Date().toISOString(),
-    environment: process.env.NODE_ENV,
-    geminiConfigured: !!process.env.GEMINI_API_KEY
+    nodeVersion: process.version
   });
 });
 
-// ==== SERVE FRONTEND FOR ALL OTHER ROUTES (SPA Support) ====
-// This catches all routes and serves index.html
-app.get('*', (req, res) => {
-  const indexPath = path.join(clientPath, 'index.html');
-  console.log('📄 Serving index.html from:', indexPath);
-  res.sendFile(indexPath);
-});
-
-// ==== ERROR HANDLING ====
-app.use((req, res) => {
-  res.status(404).json({ error: "Route not found" });
-});
-
-app.use((err, req, res, next) => {
-  console.error("Server Error:", err);
-  res.status(500).json({ 
-    error: "Internal server error",
-    message: process.env.NODE_ENV === 'development' ? err.message : undefined
+// API endpoints
+app.get("/api/health", (req, res) => {
+  res.json({ 
+    status: "API OK",
+    timestamp: new Date().toISOString()
   });
 });
 
-// ==== START SERVER ====
-const PORT = process.env.PORT || 5000;
+app.post("/api/chat", (req, res) => {
+  const { message } = req.body || {};
+  res.json({
+    success: true,
+    response: `Test: ${message || "No message"}`,
+    timestamp: new Date().toISOString()
+  });
+});
 
-app.listen(PORT, () => {
-  console.log(`🔥 Server running on port ${PORT}`);
-  console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
-  console.log(`📁 Serving frontend from: ${clientPath}`);
-  console.log(`🔗 Health check: http://localhost:${PORT}/health`);
-  console.log(`🔗 App: http://localhost:${PORT}`);
+// Serve frontend for all routes
+app.get("*", (req, res) => {
+  if (clientPath && fs.existsSync(path.join(clientPath, 'index.html'))) {
+    res.sendFile(path.join(clientPath, 'index.html'));
+  } else {
+    res.status(200).send(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>MindQuest AI - Debug</title>
+        <style>
+          body { font-family: Arial; padding: 40px; }
+          .success { color: green; }
+          .error { color: red; }
+        </style>
+      </head>
+      <body>
+        <h1>MindQuest AI</h1>
+        <p>Backend is running ✅</p>
+        <p>Client path: ${clientPath || 'Not found'}</p>
+        <p><a href="/health">Health Check</a></p>
+        <p><a href="/api/health">API Health</a></p>
+      </body>
+      </html>
+    `);
+  }
+});
+
+// Start server - CRITICAL: Listen on 0.0.0.0 for Render
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`🚀 SERVER STARTED on port ${PORT}`);
+  console.log(`📡 Listening on: 0.0.0.0:${PORT}`);
+  console.log(`🔗 Health: http://0.0.0.0:${PORT}/health`);
+  console.log(`🌐 Public URL: https://mindquest-6ree.onrender.com`);
 });
