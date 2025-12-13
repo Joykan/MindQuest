@@ -1,19 +1,17 @@
 {
-  "name": "mindquest",
+  "name": "mindquest-ai",
   "version": "1.0.0",
-  "description": "AI Mental-Wellbeing Companion",
+  "type": "module",
   "scripts": {
-    "dev": "cd frontend && python -m http.server 8080",
-    "build": "echo 'Building frontend...'",
-    "deploy:backend": "railway up",
-    "deploy:frontend": "vercel --prod",
-    "export:training-data": "python scripts/export_training_data.py",
-    "test": "python -m pytest tests/"
+    "start": "node server/index.js",
+    "dev": "nodemon server/index.js",
+    "client": "cd client && python3 -m http.server 3000",
+    "dev:all": "concurrently \"npm run dev\" \"npm run client\""
   },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/Joykan/MindQuest.git"
+  "dependencies": {
+    "concurrently": "^8.2.2"
   },
-  "author": "Joykan",
-  "license": "MIT"
+  "devDependencies": {
+    "nodemon": "^3.1.11"
+  }
 }

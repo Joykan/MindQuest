@@ -4,7 +4,7 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-const router = Router(); // ⭐ THIS LINE IS CRITICAL
+const router = Router();
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
 // Language-specific prompts
@@ -75,5 +75,4 @@ router.get("/health", (req, res) => {
   res.json({ status: "chat route active" });
 });
 
-// ⭐ CRITICAL: Export the router
 export default router;
