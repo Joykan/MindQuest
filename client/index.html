@@ -3,239 +3,323 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MindQuest | Cyber Mental Dashboard</title>
-    <link rel="stylesheet" href="styles.css">
+    <title>MindQuest AI | Cyber Therapy Assistant</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
     <div class="cyber-grid">
-        <!-- Side Panel -->
+        <!-- ===== SIDEBAR ===== -->
         <aside class="cyber-sidebar">
             <div class="cyber-logo">
                 <div class="hologram">🧠</div>
                 <div>
-                    <h1 class="glitch" data-text="MINDQUEST">MINDQUEST</h1>
-                    <p class="cyber-subtitle">Mental Wellness AI</p>
+                    <div class="glitch">MINDQUEST AI</div>
+                    <div class="cyber-subtitle">Cyber Therapy Assistant</div>
                 </div>
             </div>
 
             <div class="cyber-status">
                 <div class="status-line">
-                    <span class="status-label">API STATUS</span>
-                    <span id="api-status" class="status-indicator offline">◉ CHECKING</span>
+                    <span class="status-label">STATUS</span>
+                    <span class="status-data">ONLINE</span>
                 </div>
                 <div class="status-line">
-                    <span class="status-label">BACKEND</span>
-                    <span class="status-data">localhost:5000</span>
+                    <span class="status-label">AI MODEL</span>
+                    <span class="status-data">Gemini 2.0</span>
                 </div>
                 <div class="status-line">
-                    <span class="status-label">SESSION</span>
-                    <span class="status-data">ACTIVE</span>
+                    <span class="status-label">CONNECTION</span>
+                    <span class="status-indicator online">✓ SECURE</span>
+                </div>
+            </div>
+
+            <div class="language-selector">
+                <h4>SELECT LANGUAGE</h4>
+                <div class="lang-buttons">
+                    <button class="lang-btn active" data-lang="en">
+                        <i class="fas fa-globe-americas"></i> English
+                    </button>
+                    <button class="lang-btn" data-lang="sw">
+                        <i class="fas fa-globe-africa"></i> Kiswahili
+                    </button>
+                    <button class="lang-btn" data-lang="sg">
+                        <i class="fas fa-city"></i> Sheng
+                    </button>
                 </div>
             </div>
 
             <nav class="cyber-nav">
-                <button class="nav-item active" data-view="chat">
-                    <span class="nav-icon">💬</span> AI CHAT
+                <button class="nav-item active" data-target="chat">
+                    <i class="nav-icon fas fa-comment-dots"></i> AI Chat
                 </button>
-                <button class="nav-item" data-view="journal">
-                    <span class="nav-icon">📝</span> JOURNAL
+                <button class="nav-item" data-target="journal">
+                    <i class="nav-icon fas fa-book"></i> Journal
                 </button>
-                <button class="nav-item" data-view="insights">
-                    <span class="nav-icon">📊</span> INSIGHTS
+                <button class="nav-item" data-target="mood">
+                    <i class="nav-icon fas fa-brain"></i> Mood Tracker
                 </button>
-                <button class="nav-item" data-view="mood">
-                    <span class="nav-icon">😊</span> MOOD CHECK
+                <button class="nav-item" data-target="insights">
+                    <i class="nav-icon fas fa-chart-line"></i> Insights
+                </button>
+                <button class="nav-item" data-target="settings">
+                    <i class="nav-icon fas fa-cog"></i> Settings
                 </button>
             </nav>
 
             <div class="cyber-footer">
-                <div class="terminal-line">> SYSTEM: CONNECTED</div>
-                <div class="terminal-line">> MODE: DEVELOPMENT</div>
-                <div class="terminal-line">> TIME: <span id="cyber-time">--:--:--</span></div>
+                <div class="terminal-line">> SYSTEM: v2.4.1</div>
+                <div class="terminal-line">> ENCRYPTION: AES-256</div>
+                <div class="terminal-line">> LAST SYNC: <span id="last-sync">Just now</span></div>
             </div>
         </aside>
 
-        <!-- Main Dashboard -->
+        <!-- ===== MAIN AREA ===== -->
         <main class="cyber-main">
-            <!-- Header -->
             <header class="cyber-header">
                 <div class="header-left">
-                    <h2 id="view-title">AI CHAT INTERFACE</h2>
-                    <p class="header-subtitle">Your personal mental wellness companion</p>
+                    <h2 id="panel-title">AI Chat Assistant</h2>
+                    <div class="header-subtitle">Real-time AI-powered mental wellness support</div>
                 </div>
                 <div class="cyber-stats">
                     <div class="stat-box">
-                        <span class="stat-label">REQUESTS</span>
-                        <span class="stat-value" id="request-count">0</span>
+                        <span class="stat-label">ACTIVE</span>
+                        <span class="stat-value online" id="active-users">1</span>
                     </div>
                     <div class="stat-box">
-                        <span class="stat-label">STATUS</span>
-                        <span class="stat-value online" id="connection-status">✓</span>
+                        <span class="stat-label">LANGUAGE</span>
+                        <span class="stat-value" id="current-lang-display">EN</span>
+                    </div>
+                    <div class="stat-box">
+                        <span class="stat-label">RESPONSE TIME</span>
+                        <span class="stat-value" id="response-time">0.8s</span>
                     </div>
                 </div>
             </header>
 
-            <!-- Content Area -->
             <div class="cyber-content">
-                <!-- Chat View -->
-                <div id="view-chat" class="cyber-panel active">
+                <!-- ===== CHAT PANEL ===== -->
+                <div id="chat-panel" class="cyber-panel active">
                     <div class="cyber-card">
-                        <h3 class="card-title">💬 CHAT WITH MINDQUEST AI</h3>
-                        <div class="chat-container" id="chat-messages">
-                            <div class="chat-message ai">
-                                <span class="message-sender">MINDQUEST AI:</span>
-                                <span class="message-text">Hello! I'm your mental wellness companion. You can talk to me about anything - stress, emotions, goals, or just your day. How can I help you today?</span>
-                                <span class="message-time">[SYSTEM READY]</span>
-                            </div>
+                        <div class="card-header">
+                            <h3 class="card-title">AI Chat Assistant</h3>
+                            <div class="lang-indicator">EN</div>
                         </div>
                         
+                        <div class="chat-container" id="chat-container">
+                            <!-- Chat messages will appear here -->
+                            <div class="chat-message ai">
+                                <span class="message-sender">MindQuest AI</span>
+                                <p class="message-text">Hello! I'm your AI wellness assistant. How can I help you today?</p>
+                                <span class="message-time">Just now</span>
+                            </div>
+                        </div>
+
                         <div class="chat-controls">
                             <div class="input-group">
-                                <input type="text" id="chat-input" class="cyber-input large" 
-                                       placeholder="Type your message here...">
-                                <button id="send-btn" class="cyber-btn large">SEND</button>
+                                <input type="text" class="cyber-input large" id="message-input" placeholder="Type your message..." autocomplete="off">
+                                <button type="button" class="cyber-btn large" id="send-button">
+                                    <i class="fas fa-paper-plane"></i> Send
+                                </button>
                             </div>
                             
                             <div class="chat-options">
-                                <select id="chat-context" class="cyber-select">
+                                <select class="cyber-select" id="context-select">
                                     <option value="general">General Chat</option>
                                     <option value="therapy">Therapy Mode</option>
                                     <option value="coaching">Coaching Mode</option>
-                                    <option value="reflective">Reflective Mode</option>
                                 </select>
+                                
+                                <div class="quick-lang-switch">
+                                    <button class="lang-quick-btn" data-lang="en">EN</button>
+                                    <button class="lang-quick-btn" data-lang="sw">SW</button>
+                                    <button class="lang-quick-btn" data-lang="sg">SG</button>
+                                </div>
+                                
+                                <button type="button" class="cyber-btn secondary" id="clear-chat">
+                                    <i class="fas fa-trash"></i> Clear
+                                </button>
                             </div>
+                        </div>
+
+                        <div class="language-hint">
+                            <i class="hint-icon fas fa-language"></i>
+                            <span>Tip: You can switch languages using the buttons above or in the sidebar</span>
                         </div>
                     </div>
                 </div>
 
-                <!-- Journal View -->
-                <div id="view-journal" class="cyber-panel">
+                <!-- ===== JOURNAL PANEL ===== -->
+                <div id="journal-panel" class="cyber-panel">
                     <div class="cyber-card">
-                        <h3 class="card-title">📝 DAILY JOURNAL</h3>
-                        <div class="card-content">
-                            <textarea id="journal-text" class="cyber-textarea" 
-                                      placeholder="How are you feeling today? What's on your mind?
-                                      
-Write freely about your thoughts, emotions, challenges, or achievements..."
-                                      rows="10"></textarea>
+                        <div class="card-header">
+                            <h3 class="card-title">Digital Journal</h3>
+                            <div class="lang-indicator">EN</div>
+                        </div>
+                        
+                        <div class="journal-language-select">
+                            <span>Write in:</span>
+                            <div class="journal-lang-buttons">
+                                <button class="journal-lang-btn active" data-lang="en">English</button>
+                                <button class="journal-lang-btn" data-lang="sw">Kiswahili</button>
+                                <button class="journal-lang-btn" data-lang="sg">Sheng</button>
+                            </div>
+                        </div>
+
+                        <form id="journal-form">
+                            <textarea class="cyber-textarea" id="journal-text" placeholder="Write your thoughts, feelings, or experiences here..." rows="8"></textarea>
                             
                             <div class="form-row">
-                                <select id="journal-mood" class="cyber-select">
-                                    <option value="">Select your mood</option>
-                                    <option value="happy">😊 Happy</option>
-                                    <option value="calm">😌 Calm</option>
-                                    <option value="anxious">😰 Anxious</option>
-                                    <option value="energetic">⚡ Energetic</option>
-                                    <option value="reflective">🤔 Reflective</option>
-                                    <option value="tired">😴 Tired</option>
-                                </select>
-                                
-                                <button id="save-journal" class="cyber-btn large">💾 SAVE & ANALYZE</button>
+                                <button type="submit" class="cyber-btn">
+                                    <i class="fas fa-robot"></i> Analyze Entry
+                                </button>
+                                <button type="button" class="cyber-btn secondary" id="save-journal">
+                                    <i class="fas fa-save"></i> Save Only
+                                </button>
                             </div>
-                            
-                            <div id="journal-result" class="result-output"></div>
+                        </form>
+                    </div>
+
+                    <div class="cyber-card">
+                        <h3 class="card-title">AI Insights</h3>
+                        <div class="insights-output" id="insights-output">
+                            <p style="color: var(--text-muted); font-style: italic;">
+                                Your journal analysis will appear here...
+                            </p>
                         </div>
                     </div>
-                    
+                </div>
+
+                <!-- ===== MOOD TRACKER PANEL ===== -->
+                <div id="mood-panel" class="cyber-panel">
                     <div class="cyber-card">
-                        <h3 class="card-title">📊 AI INSIGHTS</h3>
-                        <div id="insights-container" class="insights-preview">
-                            <div class="insight-placeholder">
-                                <div class="scan-line"></div>
-                                <p>AI insights will appear here after journal entry</p>
-                                <p class="small">Emotional analysis • Cognitive patterns • Self-care suggestions</p>
+                        <div class="card-header">
+                            <h3 class="card-title">Mood Analysis</h3>
+                            <div class="lang-indicator">EN</div>
+                        </div>
+
+                        <div class="mood-language-tabs">
+                            <span>Describe mood in:</span>
+                            <button class="mood-lang-tab active" data-lang="en">English</button>
+                            <button class="mood-lang-tab" data-lang="sw">Kiswahili</button>
+                            <button class="mood-lang-tab" data-lang="sg">Sheng</button>
+                            <span class="mood-lang-hint">(AI understands all languages)</span>
+                        </div>
+
+                        <form id="mood-form">
+                            <textarea class="cyber-textarea" id="mood-text" placeholder="How are you feeling today? Describe your mood, energy level, and thoughts..." rows="6"></textarea>
+                            
+                            <div class="form-row">
+                                <button type="submit" class="cyber-btn">
+                                    <i class="fas fa-chart-pie"></i> Analyze Mood
+                                </button>
+                                <button type="button" class="cyber-btn secondary" id="quick-mood">
+                                    <i class="fas fa-bolt"></i> Quick Check
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div class="cyber-card">
+                        <h3 class="card-title">Analysis Results</h3>
+                        <div class="mood-result" id="mood-result">
+                            <div style="color: var(--text-muted); text-align: center; padding: 40px;">
+                                <i class="fas fa-brain" style="font-size: 48px; margin-bottom: 20px; color: var(--border);"></i>
+                                <p>Your mood analysis will appear here...</p>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Insights View -->
-                <div id="view-insights" class="cyber-panel">
+                <!-- ===== INSIGHTS PANEL ===== -->
+                <div id="insights-panel" class="cyber-panel">
                     <div class="cyber-card">
-                        <h3 class="card-title">📈 MENTAL WELLNESS INSIGHTS</h3>
-                        <div class="card-content">
-                            <div class="insights-grid">
-                                <div class="insight-box">
-                                    <h4>MOOD TRENDS</h4>
-                                    <div class="chart-placeholder">
-                                        <div class="chart-visualization">
-                                            <div class="chart-bar" style="height: 80%;" data-day="Mon"></div>
-                                            <div class="chart-bar" style="height: 60%;" data-day="Tue"></div>
-                                            <div class="chart-bar" style="height: 90%;" data-day="Wed"></div>
-                                            <div class="chart-bar" style="height: 70%;" data-day="Thu"></div>
-                                            <div class="chart-bar" style="height: 85%;" data-day="Fri"></div>
-                                        </div>
-                                    </div>
+                        <div class="card-header">
+                            <h3 class="card-title">Your Wellness Insights</h3>
+                            <div class="lang-indicator">EN</div>
+                        </div>
+                        
+                        <div class="result-output" id="insights-output">
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
+                                <div style="background: var(--bg-darker); padding: 20px; border-radius: 8px; border: 1px solid var(--border);">
+                                    <h4 style="color: var(--primary); margin-bottom: 10px;">Chat Activity</h4>
+                                    <p style="font-size: 14px;" id="chat-stats">Loading...</p>
                                 </div>
-                                
-                                <div class="insight-box">
-                                    <h4>COMMON THEMES</h4>
-                                    <div class="word-cloud">
-                                        <span style="font-size: 20px;">work</span>
-                                        <span style="font-size: 24px;">progress</span>
-                                        <span style="font-size: 18px;">family</span>
-                                        <span style="font-size: 22px;">goals</span>
-                                        <span style="font-size: 16px;">sleep</span>
-                                    </div>
+                                <div style="background: var(--bg-darker); padding: 20px; border-radius: 8px; border: 1px solid var(--border);">
+                                    <h4 style="color: var(--primary); margin-bottom: 10px;">Mood Trends</h4>
+                                    <p style="font-size: 14px;" id="mood-stats">Loading...</p>
+                                </div>
+                                <div style="background: var(--bg-darker); padding: 20px; border-radius: 8px; border: 1px solid var(--border);">
+                                    <h4 style="color: var(--primary); margin-bottom: 10px;">Journal Entries</h4>
+                                    <p style="font-size: 14px;" id="journal-stats">Loading...</p>
                                 </div>
                             </div>
                             
-                            <div class="insights-actions">
-                                <button id="run-analysis" class="cyber-btn">🔄 GENERATE INSIGHTS</button>
-                                <button id="clear-history" class="cyber-btn secondary">🗑️ CLEAR HISTORY</button>
-                            </div>
+                            <div class="scan-line" style="margin: 30px 0;"></div>
                             
-                            <div class="insights-output" id="insights-output">
-                                <pre class="cyber-pre">> Click "Generate Insights" to see analysis</pre>
+                            <div>
+                                <h4 style="color: var(--primary); margin-bottom: 15px;">Weekly Summary</h4>
+                                <p style="line-height: 1.6;" id="weekly-summary">
+                                    Your insights dashboard is being prepared. Use the app regularly to see personalized analytics.
+                                </p>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Mood Check View -->
-                <div id="view-mood" class="cyber-panel">
+                <!-- ===== SETTINGS PANEL ===== -->
+                <div id="settings-panel" class="cyber-panel">
                     <div class="cyber-card">
-                        <h3 class="card-title">😊 INSTANT MOOD CHECK</h3>
-                        <div class="card-content">
-                            <div class="mood-intro">
-                                <p>Quickly analyze your current emotional state. Just describe how you're feeling in a few words.</p>
+                        <div class="card-header">
+                            <h3 class="card-title">Settings & Preferences</h3>
+                            <div class="lang-indicator">EN</div>
+                        </div>
+                        
+                        <div style="display: flex; flex-direction: column; gap: 20px;">
+                            <div>
+                                <h4 style="color: var(--text); margin-bottom: 10px;">AI Response Settings</h4>
+                                <div style="display: flex; gap: 20px; margin-top: 15px;">
+                                    <label style="display: flex; align-items: center; gap: 8px;">
+                                        <input type="radio" name="response-length" value="short" checked>
+                                        <span>Short responses (1-2 sentences)</span>
+                                    </label>
+                                    <label style="display: flex; align-items: center; gap: 8px;">
+                                        <input type="radio" name="response-length" value="medium">
+                                        <span>Medium responses</span>
+                                    </label>
+                                    <label style="display: flex; align-items: center; gap: 8px;">
+                                        <input type="radio" name="response-length" value="detailed">
+                                        <span>Detailed responses</span>
+                                    </label>
+                                </div>
                             </div>
                             
-                            <textarea id="mood-text" class="cyber-textarea" 
-                                      placeholder="Describe your current mood in a few words...
-Examples:
-- Feeling optimistic about my project
-- A bit stressed about deadlines
-- Really happy after meeting friends
-- Anxious about upcoming events"
-                                      rows="6"></textarea>
+                            <div class="scan-line"></div>
                             
-                            <div class="mood-actions">
-                                <button id="analyze-mood-btn" class="cyber-btn large">🔍 ANALYZE MOOD</button>
-                                <button id="mood-history-btn" class="cyber-btn secondary">📋 VIEW HISTORY</button>
+                            <div>
+                                <h4 style="color: var(--text); margin-bottom: 10px;">Data Management</h4>
+                                <div style="display: flex; gap: 10px; margin-top: 15px;">
+                                    <button class="cyber-btn secondary" id="export-data">
+                                        <i class="fas fa-download"></i> Export Data
+                                    </button>
+                                    <button class="cyber-btn secondary" id="clear-data" style="color: var(--error);">
+                                        <i class="fas fa-trash"></i> Clear All Data
+                                    </button>
+                                    <button class="cyber-btn" id="reset-settings">
+                                        <i class="fas fa-redo"></i> Reset Settings
+                                    </button>
+                                </div>
                             </div>
                             
-                            <div id="mood-result" class="mood-result">
-                                <div class="mood-visual">
-                                    <div class="mood-wheel">
-                                        <!-- Animated mood wheel will be generated here -->
-                                    </div>
-                                </div>
-                                <div class="mood-details">
-                                    <h4>DETECTED MOOD</h4>
-                                    <div class="mood-info">
-                                        <span class="mood-label">PRIMARY:</span>
-                                        <span class="mood-value" id="primary-mood">--</span>
-                                    </div>
-                                    <div class="mood-info">
-                                        <span class="mood-label">CONFIDENCE:</span>
-                                        <span class="mood-value" id="mood-confidence">--%</span>
-                                    </div>
-                                    <div class="mood-info">
-                                        <span class="mood-label">SUGGESTION:</span>
-                                        <span class="mood-suggestion" id="mood-suggestion">--</span>
-                                    </div>
-                                </div>
+                            <div class="scan-line"></div>
+                            
+                            <div>
+                                <h4 style="color: var(--text); margin-bottom: 10px;">About MindQuest AI</h4>
+                                <p style="color: var(--text-muted); font-size: 14px; line-height: 1.6;">
+                                    Version 2.4.1 | Powered by Google Gemini AI<br>
+                                    This is a mental wellness assistant. For emergencies, please contact professional help.<br>
+                                    All data is stored locally in your browser for privacy.
+                                </p>
                             </div>
                         </div>
                     </div>
@@ -244,248 +328,7 @@ Examples:
         </main>
     </div>
 
-    <!-- CRITICAL: API Configuration MUST load first -->
-    <script src="js/api-config.js"></script>
-    
-    <!-- Core Application -->
-    <script src="js/main.js"></script>
-    <script src="js/app.js"></script>
-    
-    <!-- Optional Modules -->
-    <script src="js/lang.js"></script>
-    <script src="js/voice.js"></script>
-    
-    <!-- Initialize Dashboard -->
-    <script>
-        console.log('🧠 MINDQUEST — Cyber Dashboard Initializing...');
-        
-        // Update cyber time
-        function updateCyberTime() {
-            const now = new Date();
-            const timeStr = now.toLocaleTimeString('en-US', {hour12: false});
-            const timeEl = document.getElementById('cyber-time');
-            if (timeEl) timeEl.textContent = timeStr;
-        }
-        
-        // Start timer
-        setInterval(updateCyberTime, 1000);
-        updateCyberTime();
-        
-        // View switching
-        document.querySelectorAll('.nav-item').forEach(btn => {
-            btn.addEventListener('click', function() {
-                // Update active nav
-                document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
-                this.classList.add('active');
-                
-                // Update view title
-                const viewTitle = this.textContent.trim();
-                document.getElementById('view-title').textContent = viewTitle + ' INTERFACE';
-                
-                // Switch panels
-                const view = this.dataset.view;
-                document.querySelectorAll('.cyber-panel').forEach(panel => {
-                    panel.classList.remove('active');
-                });
-                document.getElementById(`view-${view}`).classList.add('active');
-            });
-        });
-        
-        // Check API connection
-        document.addEventListener('DOMContentLoaded', function() {
-            if (window.MindQuestAPI) {
-                console.log('✓ API interface ready');
-                
-                window.MindQuestAPI.testConnection().then(result => {
-                    const statusEl = document.getElementById('api-status');
-                    if (statusEl) {
-                        if (result.connected) {
-                            statusEl.textContent = '◉ ONLINE';
-                            statusEl.className = 'status-indicator online';
-                            document.getElementById('connection-status').textContent = '✓';
-                        } else {
-                            statusEl.textContent = '◉ OFFLINE';
-                            statusEl.className = 'status-indicator offline';
-                            document.getElementById('connection-status').textContent = '✗';
-                            document.getElementById('connection-status').className = 'stat-value offline';
-                        }
-                    }
-                });
-            } else {
-                console.error('✗ API configuration missing');
-            }
-            
-            // Setup event listeners
-            setupEventListeners();
-        });
-        
-        function setupEventListeners() {
-            // Chat send
-            const sendBtn = document.getElementById('send-btn');
-            const chatInput = document.getElementById('chat-input');
-            
-            if (sendBtn && chatInput) {
-                sendBtn.addEventListener('click', sendChatMessage);
-                chatInput.addEventListener('keypress', function(e) {
-                    if (e.key === 'Enter') sendChatMessage();
-                });
-            }
-            
-            // Journal save
-            const journalBtn = document.getElementById('save-journal');
-            if (journalBtn) {
-                journalBtn.addEventListener('click', saveJournal);
-            }
-            
-            // Mood analysis
-            const moodBtn = document.getElementById('analyze-mood-btn');
-            if (moodBtn) {
-                moodBtn.addEventListener('click', analyzeMood);
-            }
-        }
-        
-        async function sendChatMessage() {
-            const input = document.getElementById('chat-input');
-            const message = input?.value.trim();
-            
-            if (!message || !window.MindQuestAPI) return;
-            
-            // Add user message
-            addChatMessage(message, 'user');
-            input.value = '';
-            
-            try {
-                const response = await window.MindQuestAPI.chat(message, 'general');
-                
-                if (response.success) {
-                    addChatMessage(response.response, 'ai');
-                } else {
-                    addChatMessage("Sorry, I couldn't process that right now.", 'ai');
-                }
-            } catch (error) {
-                console.error('Chat error:', error);
-                addChatMessage("Connection error. Please check if backend is running.", 'ai');
-            }
-        }
-        
-        function addChatMessage(text, sender) {
-            const container = document.getElementById('chat-messages');
-            if (!container) return;
-            
-            const messageDiv = document.createElement('div');
-            messageDiv.className = `chat-message ${sender}`;
-            
-            const now = new Date();
-            const timeStr = now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-            
-            messageDiv.innerHTML = `
-                <span class="message-sender">${sender === 'ai' ? 'MINDQUEST AI:' : 'YOU:'}</span>
-                <span class="message-text">${text}</span>
-                <span class="message-time">[${timeStr}]</span>
-            `;
-            
-            container.appendChild(messageDiv);
-            container.scrollTop = container.scrollHeight;
-        }
-        
-        async function saveJournal() {
-            const text = document.getElementById('journal-text')?.value;
-            const mood = document.getElementById('journal-mood')?.value;
-            
-            if (!text || !window.MindQuestAPI) {
-                alert('Please enter journal text');
-                return;
-            }
-            
-            try {
-                const result = await window.MindQuestAPI.createJournal({ text, mood });
-                
-                if (result.status === 'success') {
-                    // Get insights
-                    const insights = await window.MindQuestAPI.getInsights(text);
-                    displayInsights(insights);
-                }
-            } catch (error) {
-                console.error('Journal error:', error);
-                alert('Failed to save journal');
-            }
-        }
-        
-        async function analyzeMood() {
-            const text = document.getElementById('mood-text')?.value;
-            
-            if (!text || !window.MindQuestAPI) {
-                alert('Please enter text to analyze');
-                return;
-            }
-            
-            try {
-                const result = await window.MindQuestAPI.analyzeMood(text);
-                
-                if (result.mood && result.mood !== 'unknown') {
-                    document.getElementById('primary-mood').textContent = result.mood.toUpperCase();
-                    document.getElementById('mood-confidence').textContent = 
-                        Math.round((result.confidence || 0.5) * 100) + '%';
-                    
-                    // Update mood wheel visualization
-                    updateMoodWheel(result.mood, result.confidence);
-                }
-            } catch (error) {
-                console.error('Mood analysis error:', error);
-            }
-        }
-        
-        function displayInsights(insights) {
-            const container = document.getElementById('insights-container');
-            if (!container) return;
-            
-            const insightsData = insights.insights || {};
-            
-            container.innerHTML = `
-                <div class="insights-card">
-                    <h4>AI ANALYSIS COMPLETE</h4>
-                    <p><strong>Emotional Tone:</strong> ${insightsData.emotionalTone || 'Neutral'}</p>
-                    ${insightsData.keyThemes ? `<p><strong>Key Themes:</strong> ${insightsData.keyThemes.join(', ')}</p>` : ''}
-                    ${insightsData.summary ? `<p><strong>Summary:</strong> ${insightsData.summary}</p>` : ''}
-                    ${insightsData.selfCareRecommendations ? `
-                        <p><strong>Self-care Suggestions:</strong></p>
-                        <ul>${insightsData.selfCareRecommendations.map(r => `<li>${r}</li>`).join('')}</ul>
-                    ` : ''}
-                </div>
-            `;
-        }
-        
-        function updateMoodWheel(mood, confidence) {
-            // Simple mood wheel visualization
-            const wheel = document.querySelector('.mood-wheel');
-            if (!wheel) return;
-            
-            const moodColors = {
-                happy: '#00ff88',
-                sad: '#0088ff', 
-                anxious: '#ffaa00',
-                calm: '#00ccff',
-                energetic: '#ff00ff',
-                reflective: '#aa00ff',
-                neutral: '#888888'
-            };
-            
-            wheel.innerHTML = `
-                <div class="wheel-segment" style="
-                    width: 100px;
-                    height: 100px;
-                    border-radius: 50%;
-                    background: conic-gradient(
-                        ${moodColors[mood] || '#00ffcc'} 0deg, 
-                        ${moodColors[mood] || '#00ffcc'} ${confidence * 360}deg, 
-                        #333 ${confidence * 360}deg, 
-                        #333 360deg
-                    );
-                    box-shadow: 0 0 20px ${moodColors[mood] || '#00ffcc'};
-                "></div>
-                <div class="wheel-label">${mood.toUpperCase()}</div>
-            `;
-        }
-    </script>
+    <!-- JavaScript Files -->
+    <script src="script.js"></script>
 </body>
 </html>
