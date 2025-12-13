@@ -5,16 +5,27 @@ let currentLanguage = 'en';
 let currentContext = 'general';
 let chatHistory = [];
 
-// API Configuration
-const API_BASE_URL = window.location.hostname === 'localhost' || 
-                     window.location.hostname === '127.0.0.1'
-    ? 'http://localhost:4000' 
-    : 'https://your-render-backend.onrender.com'; // ← UPDATE THIS AFTER DEPLOYMENT
+// API Configuration - DYNAMIC for dev/production
+const API_BASE_URL = (() => {
+  // Development - localhost
+  if (window.location.hostname === 'localhost' || 
+      window.location.hostname === '127.0.0.1') {
+    console.log('🔧 Development mode: Using local backend');
+    return 'http://localhost:4000';
+  }
+  
+  // Production - Vercel + Render
+  // When frontend is on Vercel, backend is on Render
+  console.log('🚀 Production mode: Using Render backend');
+  return 'https://mindquest-6ree.onrender.com';
+})();
+
+console.log('🌐 API Base URL:', API_BASE_URL);
 
 // Initialize the app
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('MindQuest AI initialized');
-    console.log('API Base URL:', API_BASE_URL);
+    console.log('🧠 MindQuest AI initialized');
+    console.log('📱 Current URL:', window.location.href);
     
     initLanguage();
     initNavigation();
@@ -24,7 +35,50 @@ document.addEventListener('DOMContentLoaded', function() {
     initInsights();
     initSettings();
     updateLastSync();
+    
+    // Test backend connection
+    testBackendConnection();
 });
+
+// Test backend connection on startup
+async function testBackendConnection() {
+    try {
+        console.log('🔗 Testing backend connection...');
+        const response = await fetch(`${API_BASE_URL}/health`);
+        if (response.ok) {
+            const data = await response.json();
+            console.log('✅ Backend connected:', data);
+            updateConnectionStatus(true);
+        } else {
+            console.warn('⚠️ Backend health check failed');
+            updateConnectionStatus(false);
+        }
+    } catch (error) {
+        console.error('❌ Backend connection failed:', error);
+        updateConnectionStatus(false);
+    }
+}
+
+function updateConnectionStatus(isConnected) {
+    const statusIndicator = document.querySelector('.status-indicator');
+    const responseTimeElement = document.getElementById('response-time');
+    
+    if (statusIndicator) {
+        statusIndicator.className = `status-indicator ${isConnected ? 'online' : 'offline'}`;
+        statusIndicator.textContent = isConnected ? '✓ SECURE' : '✗ OFFLINE';
+    }
+    
+    if (responseTimeElement) {
+        responseTimeElement.textContent = isConnected ? '0.8s' : 'Offline';
+        responseTimeElement.className = `stat-value ${isConnected ? '' : 'offline'}`;
+    }
+    
+    // Update active users (simulated)
+    const activeUsersElement = document.getElementById('active-users');
+    if (activeUsersElement && isConnected) {
+        activeUsersElement.textContent = '1';
+    }
+}
 
 // ===== LANGUAGE MANAGEMENT =====
 function initLanguage() {
@@ -75,6 +129,17 @@ function setLanguage(lang) {
     updateLanguageButtons();
     updateLanguageIndicators();
     updatePanelTitle();
+    
+    // Update chat placeholder based on language
+    const messageInput = document.querySelector('#message-input');
+    if (messageInput) {
+        const placeholders = {
+            en: "Type your message...",
+            sw: "Andika ujumbe wako...",
+            sg: "Type your message..."
+        };
+        messageInput.placeholder = placeholders[lang] || placeholders.en;
+    }
 }
 
 function updateLanguageButtons() {
@@ -171,7 +236,8 @@ function initChat() {
         return;
     }
     
-    console.log('Chat initialized with API:', API_BASE_URL);
+    console.log('💬 Chat initialized');
+    console.log('🔗 API URL:', API_BASE_URL);
     
     // Set current context
     if (contextSelect) {
@@ -197,7 +263,7 @@ function initChat() {
             return;
         }
         
-        console.log('Sending message:', message);
+        console.log('📤 Sending message:', message);
         
         // Add user message to chat
         addMessageToChat('user', message);
@@ -279,7 +345,7 @@ async function sendToAPI(message) {
         
         const startTime = Date.now();
         
-        console.log('Sending to API:', `${API_BASE_URL}/api/chat`);
+        console.log('📡 Calling API:', `${API_BASE_URL}/api/chat`);
         
         const response = await fetch(`${API_BASE_URL}/api/chat`, {
             method: 'POST',
@@ -302,23 +368,46 @@ async function sendToAPI(message) {
         
         const data = await response.json();
         
+        console.log('📥 API Response:', data);
+        
         if (data.success) {
-            addMessageToChat('ai', data.response);
+            let responseText = data.response;
+            // Add indicator if using fallback
+            if (data.source === 'fallback') {
+                responseText += ' 🔄';
+                console.log('🔄 Using fallback response');
+            }
+            addMessageToChat('ai', responseText);
         } else {
             addMessageToChat('ai', `Error: ${data.message || 'Failed to get response'}`);
         }
     } catch (error) {
-        console.error('API Error:', error);
-        addMessageToChat('ai', 'Sorry, I encountered an error. Please try again.');
+        console.error('❌ API Error:', error);
         
-        // Fallback responses based on context
+        // Fallback responses when API is completely down
         const fallbackResponses = {
-            therapy: 'I understand this is important. Could you try rephrasing your concern?',
-            coaching: 'Let me think about that. In the meantime, what specific goal are you working toward?',
-            general: 'I apologize for the technical issue. Could you please rephrase or try again?'
+            therapy: currentLanguage === 'sw' 
+                ? 'Naelewa hii ni muhimu. Unaweza kujaribu kuielezea tena?' 
+                : currentLanguage === 'sg'
+                ? 'I get this is important. Unaweza try ku-rephrase?'
+                : 'I understand this is important. Could you try rephrasing your concern?',
+            coaching: currentLanguage === 'sw'
+                ? 'Nifikirie juu ya hilo. Wakati huo huo, ni lengo gani maalum unalofanya kazi?'
+                : currentLanguage === 'sg'
+                ? 'Let me think about that. Meanwhile, ni specific goal gani unafanya kazi?'
+                : 'Let me think about that. In the meantime, what specific goal are you working toward?',
+            general: currentLanguage === 'sw'
+                ? 'Samahani kwa tatizo la kiufundi. Tafadhali jaribu tena.'
+                : currentLanguage === 'sg'
+                ? 'Sorry for the tech issue. Please try again.'
+                : 'I apologize for the technical issue. Could you please rephrase or try again?'
         };
         
-        addMessageToChat('ai', fallbackResponses[currentContext] || 'Please try again.');
+        const fallback = fallbackResponses[currentContext] || fallbackResponses.general;
+        addMessageToChat('ai', fallback + ' (Offline Mode)');
+        
+        // Update connection status
+        updateConnectionStatus(false);
     } finally {
         // Restore button
         sendButton.disabled = false;
