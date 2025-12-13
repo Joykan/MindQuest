@@ -1,11 +1,14 @@
 services:
   - type: web
-    name: mindquest-api
+    name: mindquest-ai
     env: node
     region: oregon
     plan: free
-    buildCommand: cd server && npm install
-    startCommand: cd server && npm start
+    buildCommand: |
+      echo "🚀 Building MindQuest AI..."
+      cd server && npm install
+      echo "✅ Dependencies installed"
+    startCommand: cd server && node index.js
     healthCheckPath: /health
     envVars:
       - key: PORT
