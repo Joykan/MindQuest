@@ -3,30 +3,24 @@
   "name": "mindquest",
   "builds": [
     {
-      "src": "frontend/index.html",
+      "src": "index.html",
       "use": "@vercel/static"
     },
     {
-      "src": "frontend/**/*.js",
+      "src": "*.js",
       "use": "@vercel/static"
     },
     {
-      "src": "frontend/**/*.css",
+      "src": "*.css",
       "use": "@vercel/static"
     }
   ],
   "rewrites": [
     {
       "source": "/(.*)",
-      "destination": "/frontend/index.html"
+      "destination": "/index.html"
     }
   ],
-  "env": {
-    "VITE_API_URL": "https://mindquest-pxjz.onrender.com",
-    "VITE_APP_NAME": "MindQuest",
-    "VITE_ENABLE_ANALYTICS": "true",
-    "VITE_VERSION": "1.0.0"
-  },
   "headers": [
     {
       "source": "/(.*)",
@@ -38,10 +32,6 @@
         {
           "key": "X-Frame-Options",
           "value": "DENY"
-        },
-        {
-          "key": "X-XSS-Protection",
-          "value": "1; mode=block"
         }
       ]
     }

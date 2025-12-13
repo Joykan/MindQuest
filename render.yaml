@@ -4,12 +4,12 @@ services:
     env: node
     region: oregon
     plan: free
-    buildCommand: cd server && npm install
-    startCommand: cd server && npm start
+    buildCommand: npm install
+    startCommand: npm start
     healthCheckPath: /health
     envVars:
       - key: PORT
-        value: 4000
+        value: 10000
       - key: NODE_ENV
         value: production
       - key: GEMINI_API_KEY

@@ -1,17 +1,13 @@
 {
   "name": "mindquest-ai",
   "version": "1.0.0",
-  "type": "module",
   "scripts": {
     "start": "node server/index.js",
     "dev": "nodemon server/index.js",
-    "client": "cd client && python3 -m http.server 3000",
-    "dev:all": "concurrently \"npm run dev\" \"npm run client\""
-  },
-  "dependencies": {
-    "concurrently": "^8.2.2"
+    "build": "echo 'Building MindQuest...' && echo 'Frontend: client/' && echo 'Backend: server/'",
+    "test": "echo \"No tests specified\" && exit 0"
   },
   "devDependencies": {
-    "nodemon": "^3.1.11"
+    "nodemon": "^3.0.1"
   }
 }

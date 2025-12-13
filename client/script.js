@@ -5,8 +5,17 @@ let currentLanguage = 'en';
 let currentContext = 'general';
 let chatHistory = [];
 
+// API Configuration
+const API_BASE_URL = window.location.hostname === 'localhost' || 
+                     window.location.hostname === '127.0.0.1'
+    ? 'http://localhost:4000' 
+    : 'https://your-render-backend.onrender.com'; // ← UPDATE THIS AFTER DEPLOYMENT
+
 // Initialize the app
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('MindQuest AI initialized');
+    console.log('API Base URL:', API_BASE_URL);
+    
     initLanguage();
     initNavigation();
     initChat();
@@ -139,6 +148,11 @@ function initNavigation() {
             });
             
             updatePanelTitle();
+            
+            // Update insights when switching to insights panel
+            if (target === 'insights') {
+                updateInsights();
+            }
         });
     });
 }
@@ -152,12 +166,12 @@ function initChat() {
     const chatContainer = document.querySelector('#chat-container');
     const clearButton = document.querySelector('#clear-chat');
     
-    if (!chatForm || !messageInput || !sendButton) {
+    if (!messageInput || !sendButton) {
         console.error('Chat elements not found!');
         return;
     }
     
-    console.log('Chat initialized');
+    console.log('Chat initialized with API:', API_BASE_URL);
     
     // Set current context
     if (contextSelect) {
@@ -265,7 +279,9 @@ async function sendToAPI(message) {
         
         const startTime = Date.now();
         
-        const response = await fetch('/api/chat', {
+        console.log('Sending to API:', `${API_BASE_URL}/api/chat`);
+        
+        const response = await fetch(`${API_BASE_URL}/api/chat`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -391,7 +407,7 @@ async function analyzeMood() {
     
     // Show loading
     moodResult.innerHTML = `
-        <div style="color: var(--text-muted); text-align: center; padding: 40px;">
+        <div style="color: var(--text-muted); text-align: center; padding: 40px; grid-column: 1 / -1;">
             <i class="fas fa-spinner fa-spin" style="font-size: 48px; margin-bottom: 20px; color: var(--primary);"></i>
             <p>Analyzing your mood...</p>
         </div>
@@ -450,7 +466,7 @@ async function analyzeMood() {
     } catch (error) {
         console.error('Mood analysis error:', error);
         moodResult.innerHTML = `
-            <div style="color: var(--error); text-align: center; padding: 40px;">
+            <div style="color: var(--error); text-align: center; padding: 40px; grid-column: 1 / -1;">
                 <i class="fas fa-exclamation-triangle" style="font-size: 48px; margin-bottom: 20px;"></i>
                 <p>Failed to analyze mood. Please try again.</p>
             </div>
@@ -580,7 +596,7 @@ function initJournal() {
             const insightsOutput = document.querySelector('#insights-output');
             if (insightsOutput) {
                 insightsOutput.innerHTML = `
-                    <div style="color: var(--success);">
+                    <div style="color: var(--success); display: flex; align-items: center; gap: 10px;">
                         <i class="fas fa-check-circle"></i> Journal entry saved successfully!
                     </div>
                 `;
