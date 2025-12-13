@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head><title>Debug</title></head>
+<body>
+    <h1>Debug Page</h1>
+    <div id="output"></div>
+    
+    <script src="js/api-config.js"></script>
+    <script>
+        const output = document.getElementById('output');
+        
+        // Test what's loaded
+        output.innerHTML += `<p>1. window.MindQuestAPI: ${window.MindQuestAPI ? '✅ EXISTS' : '❌ MISSING'}</p>`;
+        
+        if (window.MindQuestAPI) {
+            output.innerHTML += `<p>2. backendUrl: ${window.MindQuestAPI.backendUrl}</p>`;
+            
+            // Test connection
+            window.MindQuestAPI.testConnection().then(result => {
+                output.innerHTML += `<p>3. Connection: ${result.connected ? '✅ SUCCESS' : '❌ FAILED'}</p>`;
+                output.innerHTML += `<p>4. Error: ${result.error || 'None'}</p>`;
+            });
+        }
+    </script>
+</body>
+</html>

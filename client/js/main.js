@@ -1,6 +1,6 @@
 // -----------------------------
 // MindQuest frontend main.js
-// 10/10 senior dev vibes
+// Frontend-only version
 // -----------------------------
 
 import { LANGUAGES, responses } from "./lang.js";
@@ -9,8 +9,36 @@ import { LANGUAGES, responses } from "./lang.js";
 let currentLang = LANGUAGES.EN; // default
 const chatContainer = document.getElementById("chatContainer");
 
+// Backend URL configuration
+const CONFIG = {
+  backendUrl: localStorage.getItem('MQ_BACKEND_URL') || 'http://localhost:5000'
+};
+
+// ---------- API Status Functions ----------
+function setApiStatus(txt, ok=true) {
+  const apiStatusEl = document.getElementById('api-status');
+  if (!apiStatusEl) return;
+  apiStatusEl.textContent = txt;
+  apiStatusEl.style.color = ok ? '#34d399' : '#f97316';
+}
+
+async function checkApi() {
+  try {
+    const res = await fetch(`${CONFIG.backendUrl}/health`);
+    if (res.ok) {
+      setApiStatus('online');
+      return true;
+    }
+    setApiStatus('offline', false);
+    return false;
+  } catch (e) {
+    setApiStatus('offline', false);
+    return false;
+  }
+}
+
 // ---------- Language Selector ----------
-document.getElementById("langSelect").addEventListener("change", (e) => {
+document.getElementById("langSelect")?.addEventListener("change", (e) => {
   currentLang = e.target.value;
 });
 
@@ -18,17 +46,37 @@ document.getElementById("langSelect").addEventListener("change", (e) => {
 export async function processReply(text) {
   showTypingIndicator();
 
-  // simulate AI thinking delay
-  await new Promise((r) => setTimeout(r, 800));
-
-  hideTypingIndicator();
-  const output = responses[currentLang](text);
-  addChatBubble(output, "ai");
-  speak(output);
+  try {
+    // Call your actual backend API
+    const res = await fetch(`${CONFIG.backendUrl}/api/chat`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ 
+        message: text, 
+        context: 'general',
+        userId: 'user-' + Date.now()
+      })
+    });
+    
+    const data = await res.json();
+    hideTypingIndicator();
+    
+    if (data.success) {
+      addChatBubble(data.response, "ai");
+      speak(data.response);
+    } else {
+      addChatBubble("Sorry, I couldn't process that. Please try again.", "ai");
+    }
+  } catch (error) {
+    hideTypingIndicator();
+    addChatBubble("Network error. Check if backend is running.", "ai");
+    console.error('API Error:', error);
+  }
 }
 
 // ---------- Add Chat Bubble ----------
 function addChatBubble(message, sender = "ai") {
+  if (!chatContainer) return;
   const bubble = document.createElement("div");
   bubble.classList.add("chat-bubble", sender);
   bubble.textContent = message;
@@ -38,6 +86,7 @@ function addChatBubble(message, sender = "ai") {
 
 // ---------- Typing Indicator ----------
 function showTypingIndicator() {
+  if (!chatContainer) return;
   const typing = document.createElement("div");
   typing.id = "typingIndicator";
   typing.classList.add("typing");
@@ -53,33 +102,59 @@ function hideTypingIndicator() {
 
 // ---------- Text-to-Speech ----------
 function speak(text) {
-  if (!window.speechSynthesis) return;
-  const utterance = new SpeechSynthesisUtterance(text);
-
-  switch (currentLang) {
-    case LANGUAGES.EN:
-      utterance.lang = "en-US";
-      break;
-    case LANGUAGES.SW:
-    case LANGUAGES.SH:
-      utterance.lang = "sw-KE";
-      break;
+  if ('speechSynthesis' in window) {
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = 'en-US';
+    speechSynthesis.speak(utterance);
   }
-
-  window.speechSynthesis.speak(utterance);
 }
 
-// ---------- Optional: Send User Message ----------
-export function sendUserMessage(text) {
-  if (!text) return;
-  addChatBubble(text, "user");
-  // call AI backend
-  fetch("/api/chat", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ message: text }),
-  })
-    .then((res) => res.json())
-    .then((data) => processReply(data.reply))
-    .catch((err) => processReply("Oops! Something broke 😅"));
-}
+// ---------- Initialize on Load ----------
+document.addEventListener('DOMContentLoaded', () => {
+  console.log('MindQuest frontend initialized');
+  
+  // Check API connection
+  checkApi();
+  
+  // Setup API URL save button if exists
+  const saveApiBtn = document.getElementById('save-api-url');
+  const apiUrlInput = document.getElementById('api-url-input');
+  
+  if (saveApiBtn && apiUrlInput) {
+    saveApiBtn.addEventListener('click', () => {
+      const url = apiUrlInput.value.trim();
+      if (!url) return alert('Enter backend URL');
+      
+      CONFIG.backendUrl = url.replace(/\/+$/, '');
+      localStorage.setItem('MQ_BACKEND_URL', CONFIG.backendUrl);
+      checkApi();
+      alert('Saved backend URL: ' + CONFIG.backendUrl);
+    });
+    
+    // Show current URL in input
+    apiUrlInput.value = CONFIG.backendUrl;
+  }
+  
+  // Setup chat form if exists
+  const chatForm = document.getElementById('chatForm');
+  const chatInput = document.getElementById('chatInput');
+  
+  if (chatForm && chatInput) {
+    chatForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const message = chatInput.value.trim();
+      if (!message) return;
+      
+      // Add user message
+      addChatBubble(message, "user");
+      chatInput.value = "";
+      
+      // Get AI reply
+      await processReply(message);
+    });
+  }
+});
+
+// Make config available globally
+window.MindQuestConfig = CONFIG;
+window.checkApi = checkApi;
