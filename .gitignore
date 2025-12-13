@@ -84,4 +84,9 @@ coverage/
 .parcel-cache/
 .next/
 out/
-.EXTRA_SECURE_FILES
+.EXTRA_SECURE_FILESclient/.env
+client/.env.*
+client/node_modules/
+server/.env
+server/.env.*
+server/node_modules/
