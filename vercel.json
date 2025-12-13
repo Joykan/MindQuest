@@ -3,37 +3,27 @@
   "name": "mindquest",
   "builds": [
     {
-      "src": "index.html",
+      "src": "client/index.html",
       "use": "@vercel/static"
     },
     {
-      "src": "*.js",
+      "src": "client/**/*.js",
       "use": "@vercel/static"
     },
     {
-      "src": "*.css",
+      "src": "client/**/*.css",
       "use": "@vercel/static"
     }
   ],
   "rewrites": [
     {
       "source": "/(.*)",
-      "destination": "/index.html"
+      "destination": "/client/index.html"
     }
   ],
-  "headers": [
-    {
-      "source": "/(.*)",
-      "headers": [
-        {
-          "key": "X-Content-Type-Options",
-          "value": "nosniff"
-        },
-        {
-          "key": "X-Frame-Options",
-          "value": "DENY"
-        }
-      ]
-    }
-  ]
+  "env": {
+    "VITE_API_URL": "https://your-render-app.onrender.com",
+    "VITE_APP_NAME": "MindQuest",
+    "VITE_ENABLE_ANALYTICS": "false"
+  }
 }
