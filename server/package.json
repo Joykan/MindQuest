@@ -1,31 +1,16 @@
 {
   "name": "mindquest-backend",
   "version": "1.0.0",
-  "description": "MindQuest Backend API - Mental wellness with AI",
+  "description": "MindQuest Backend API",
   "type": "module",
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
-    "dev": "nodemon index.js",
-    "test": "node test-api.js",
-    "test:chat": "curl -X POST http://localhost:5000/api/chat -H \"Content-Type: application/json\" -d '{\"message\":\"Hello\"}'",
-    "test:insights": "curl -X POST http://localhost:5000/api/get_insights -H \"Content-Type: application/json\" -d '{\"journalText\":\"Test journal\"}'"
+    "dev": "nodemon index.js"
   },
   "dependencies": {
-    "express": "^5.2.1",
     "cors": "^2.8.5",
-    "dotenv": "^17.2.3",
-    "@google/genai": "^1.33.0",
-    "mongoose": "^9.0.1"
-  },
-  "devDependencies": {
-    "nodemon": "^3.1.11"
-  },
-  "engines": {
-    "node": ">=18.0.0",
-    "npm": ">=9.0.0"
-  },
-  "keywords": ["ai", "therapy", "mental-health", "journaling", "gemini"],
-  "author": "MindQuest Team",
-  "license": "MIT"
+    "dotenv": "^16.6.1",
+    "express": "^4.22.1"
+  }
 }
