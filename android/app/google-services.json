@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "347281226924",
+    "project_id": "mindquest-50b3d",
+    "storage_bucket": "mindquest-50b3d.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:347281226924:android:4885d05df5f474a8483309",
+        "android_client_info": {
+          "package_name": "com.example.mindquest"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDGxgRYbxdiBgLFrZ36xF4zlcpoR1aRNyo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

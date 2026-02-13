@@ -1,0 +1,11 @@
+[
+  {
+    "question": "What is one healthy way to handle stress?",
+    "question_sw": "Ni njia gani moja nzuri ya kukabiliana na msongo wa mawazo?",
+    "question_sg": "Njia gani poa ya kudeal na stress?",
+    "options": ["Taking deep breaths", "Ignoring feelings", "Never sleeping", "Isolating self"],
+    "options_sw": ["Kuvuta pumzi ndefu", "Kupuuza hisia", "Kutolala kabisa", "Kujitenga"],
+    "options_sg": ["Kuvuta pumzi ndani", "Kudharau feelings", "Kutolala", "Kujifungia"],
+    "answer": "Taking deep breaths"
+  }
+]

@@ -1,0 +1,2 @@
+- [x] Remove unused imports from lib/screens/mood_screen.dart
+- [x] Add curly braces to if statements in lib/screens/ai_chat_screen.dart
