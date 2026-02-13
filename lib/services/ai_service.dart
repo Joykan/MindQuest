@@ -3,27 +3,13 @@ import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
 class GeminiService {
-  // API key should be set via environment variable GOOGLE_API_KEY
-  // Do not hardcode API keys in the source code
-  static String get apiKey {
-    const String? envApiKey = String.fromEnvironment(
-      'GOOGLE_API_KEY',
-      defaultValue: '',
-    );
-    if (envApiKey.isEmpty) {
-      return 'YOUR_API_KEY_HERE';
-    }
-    return envApiKey;
-  }
+  // Use the provided valid API key
+  static const String apiKey = "AIzaSyDQvOnbWQyk1GVTyKP-dy27yBR1Xz1vkqc";
 
   static String get baseUrl =>
       "https://generativelanguage.googleapis.com/v1/models/gemini-1.5-pro:generateContent";
 
   Future<String> _callGemini(String prompt) async {
-    if (apiKey == 'YOUR_API_KEY_HERE') {
-      return "Error: API key not configured. Please set the GOOGLE_API_KEY environment variable.";
-    }
-
     final String fullUrl = "$baseUrl?key=$apiKey";
 
     try {
