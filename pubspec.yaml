@@ -1,0 +1,64 @@
+name: mindquest
+description: A gamified AI mental health companion for Kenyan youth with advanced analytics and real-time features
+publish_to: 'none'
+version: 2.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # Supabase
+  supabase_flutter: ^2.3.4
+
+  # AI
+  http: ^1.2.1
+
+  # State Management
+  flutter_riverpod: ^2.4.10
+
+  # Navigation
+  go_router: ^13.2.0
+
+  # Local Database & Caching
+  hive: ^2.2.3
+  hive_flutter: ^1.1.0
+
+  # Dependency Injection
+  get_it: ^7.6.0
+
+  # UI & Animations
+  flutter_animate: ^4.5.0
+  google_fonts: ^6.2.1
+  fl_chart: ^0.67.0
+  shimmer: ^3.0.0
+  animated_text_kit: ^4.2.2
+  confetti: ^0.7.0
+  percent_indicator: ^4.2.3
+  smooth_page_indicator: ^1.1.0
+
+  # Utilities
+  intl: ^0.19.0
+  uuid: ^4.3.3
+  shared_preferences: ^2.2.3
+  connectivity_plus: ^6.0.3
+  url_launcher: ^6.2.5
+  crypto: ^3.0.3
+  logger: ^2.0.2+1
+  drift: ^2.13.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
+  drift_dev: ^2.13.0
+  build_runner: ^2.4.6
+  hive_generator: ^2.0.1
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/images/
+    - assets/animations/
