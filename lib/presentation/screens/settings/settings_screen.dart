@@ -16,7 +16,11 @@ class SettingsScreen extends ConsumerWidget {
     final theme = ref.watch(themeProvider);
 
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
+        backgroundColor: Colors.white,
+        titleTextStyle: const TextStyle(fontFamily: 'Nunito', fontSize: 20, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
+        iconTheme: const IconThemeData(color: AppColors.textPrimary),
         title: Text(lang == 'sw' ? 'Mipango' : 'Settings'),
       ),
       body: SingleChildScrollView(
@@ -27,7 +31,7 @@ class SettingsScreen extends ConsumerWidget {
             // ── Language Settings ──────────────────────────
             Text(
               lang == 'sw' ? 'Lugha' : 'Language',
-              style: Theme.of(context).textTheme.headlineSmall,
+              style: const TextStyle(fontFamily: 'Nunito', fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
             ).animate().fadeIn(),
             const SizedBox(height: 12),
             _SettingCard(
@@ -62,7 +66,7 @@ class SettingsScreen extends ConsumerWidget {
             // ── Appearance Settings ────────────────────────
             Text(
               lang == 'sw' ? 'Muonekano' : 'Appearance',
-              style: Theme.of(context).textTheme.headlineSmall,
+              style: const TextStyle(fontFamily: 'Nunito', fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
             ).animate().fadeIn(),
             const SizedBox(height: 12),
             _SettingCard(

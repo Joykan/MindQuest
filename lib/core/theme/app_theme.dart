@@ -4,36 +4,45 @@
 import 'package:flutter/material.dart';
 
 class AppColors {
-  static const Color primary = Color(0xFF7C6FCD);
-  static const Color primaryLight = Color(0xFFB8AEED);
-  static const Color primaryDark = Color(0xFF5A4FAA);
+  // Primary teal-green palette (matches screenshots)
+  static const Color primary = Color(0xFF4A9176);
+  static const Color primaryLight = Color(0xFF6ECFB3);
+  static const Color primaryDark = Color(0xFF366B58);
   static const Color secondary = Color(0xFF6ECFB3);
   static const Color secondaryLight = Color(0xFFA8E6D8);
   static const Color accent = Color(0xFFFFB085);
   static const Color accentLight = Color(0xFFFFD4B8);
 
-  static const Color background = Color(0xFFF7F5FF);
+  // Light surfaces (home/dashboard)
+  static const Color background = Color(0xFFF5F5F5);
   static const Color surface = Color(0xFFFFFFFF);
-  static const Color surfaceVariant = Color(0xFFEFEDF9);
+  static const Color surfaceVariant = Color(0xFFEEEEEE);
 
-  static const Color darkBackground = Color(0xFF1A1730);
-  static const Color darkSurface = Color(0xFF252240);
-  static const Color darkCard = Color(0xFF2E2B50);
+  // Dark surfaces (login, onboarding, mood screens)
+  static const Color darkBackground = Color(0xFF1A2B23);
+  static const Color darkSurface = Color(0xFF243B30);
+  static const Color darkCard = Color(0xFF2D4A3A);
+  static const Color darkInput = Color(0xFF2A3D32);
 
-  static const Color success = Color(0xFF6ECFB3);
+  // Semantic colors
+  static const Color success = Color(0xFF4A9176);
   static const Color warning = Color(0xFFFFB085);
   static const Color error = Color(0xFFFF6B8A);
   static const Color info = Color(0xFF74B9E8);
   static const Color crisis = Color(0xFFFF4D6D);
 
-  static const Color textPrimary = Color(0xFF2D2A4A);
-  static const Color textSecondary = Color(0xFF6B6882);
-  static const Color textHint = Color(0xFFADABBF);
+  // Text
+  static const Color textPrimary = Color(0xFF1A2B23);
+  static const Color textSecondary = Color(0xFF5A7066);
+  static const Color textHint = Color(0xFF8AAA9A);
+
+  // Nav bar button color (sage green used in screenshots)
+  static const Color navButton = Color(0xFF6DAF9A);
 
   static const Map<String, Color> tierColors = {
     'Newcomer': Color(0xFF9DB8D0),
     'Explorer': Color(0xFF6ECFB3),
-    'Warrior': Color(0xFF7C6FCD),
+    'Warrior': Color(0xFF4A9176),
     'Mind Master': Color(0xFFFFB085),
     'Legend': Color(0xFFFFD700),
   };
@@ -43,7 +52,7 @@ class AppColors {
     2: Color(0xFFFFB085),
     3: Color(0xFFFFD166),
     4: Color(0xFF6ECFB3),
-    5: Color(0xFF7C6FCD),
+    5: Color(0xFF4A9176),
   };
 }
 
@@ -124,6 +133,8 @@ class AppTheme {
               const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
           hintStyle: const TextStyle(
               fontFamily: 'Nunito', color: AppColors.textHint, fontSize: 15),
+          labelStyle: const TextStyle(
+              fontFamily: 'Nunito', color: AppColors.textSecondary, fontSize: 15),
         ),
         textTheme: const TextTheme(
           displayLarge: TextStyle(
@@ -180,6 +191,86 @@ class AppTheme {
           brightness: Brightness.dark,
           background: AppColors.darkBackground,
           surface: AppColors.darkSurface,
+          primary: AppColors.primary,
+          secondary: AppColors.secondary,
+        ),
+        appBarTheme: const AppBarTheme(
+          backgroundColor: AppColors.darkBackground,
+          elevation: 0,
+          centerTitle: true,
+          titleTextStyle: TextStyle(
+            fontFamily: 'Nunito',
+            fontSize: 20,
+            fontWeight: FontWeight.w700,
+            color: Colors.white,
+          ),
+          iconTheme: IconThemeData(color: Colors.white),
+        ),
+        inputDecorationTheme: InputDecorationTheme(
+          filled: true,
+          fillColor: AppColors.darkInput,
+          border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: BorderSide.none),
+          enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: BorderSide.none),
+          focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: const BorderSide(color: AppColors.primary, width: 2)),
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+          hintStyle: const TextStyle(
+              fontFamily: 'Nunito', color: Color(0xFF6A8A78), fontSize: 15),
+          labelStyle: const TextStyle(
+              fontFamily: 'Nunito', color: Color(0xFF8AAA9A), fontSize: 15),
+          prefixIconColor: Color(0xFF8AAA9A),
+          suffixIconColor: Color(0xFF8AAA9A),
+        ),
+        textTheme: const TextTheme(
+          displayLarge: TextStyle(
+              fontFamily: 'Nunito',
+              fontSize: 32,
+              fontWeight: FontWeight.w800,
+              color: Colors.white),
+          displayMedium: TextStyle(
+              fontFamily: 'Nunito',
+              fontSize: 28,
+              fontWeight: FontWeight.w700,
+              color: Colors.white),
+          headlineLarge: TextStyle(
+              fontFamily: 'Nunito',
+              fontSize: 24,
+              fontWeight: FontWeight.w700,
+              color: Colors.white),
+          headlineMedium: TextStyle(
+              fontFamily: 'Nunito',
+              fontSize: 20,
+              fontWeight: FontWeight.w700,
+              color: Colors.white),
+          headlineSmall: TextStyle(
+              fontFamily: 'Nunito',
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: Colors.white),
+          titleLarge: TextStyle(
+              fontFamily: 'Nunito',
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+              color: Colors.white),
+          titleMedium: TextStyle(
+              fontFamily: 'Nunito',
+              fontSize: 15,
+              fontWeight: FontWeight.w600,
+              color: Colors.white),
+          bodyLarge: TextStyle(
+              fontFamily: 'Nunito', fontSize: 16, color: Colors.white),
+          bodyMedium: TextStyle(
+              fontFamily: 'Nunito',
+              fontSize: 14,
+              color: Color(0xFF8AAA9A)),
+          bodySmall: TextStyle(
+              fontFamily: 'Nunito', fontSize: 12, color: Color(0xFF6A8A78)),
         ),
       );
 }

@@ -51,7 +51,16 @@ class _ResourcesScreenState extends ConsumerState<ResourcesScreen> {
     final resources = ref.watch(resourcesProvider);
 
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
+          backgroundColor: Colors.white,
+          titleTextStyle: const TextStyle(
+            fontFamily: 'Nunito',
+            fontSize: 20,
+            fontWeight: FontWeight.w700,
+            color: AppColors.textPrimary,
+          ),
+          iconTheme: const IconThemeData(color: AppColors.textPrimary),
           title:
               Text(lang == 'sw' ? 'Rasilimali za Afya' : 'Wellness Resources')),
       body: Column(children: [
@@ -108,7 +117,9 @@ class _ResourcesScreenState extends ConsumerState<ResourcesScreen> {
                 children: [
                   if (featured.isNotEmpty && _filter == null) ...[
                     Text(lang == 'sw' ? '⭐ Zilizoangaziwa' : '⭐ Featured',
-                        style: Theme.of(context).textTheme.headlineSmall),
+                        style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                          color: AppColors.textPrimary,
+                        )),
                     const SizedBox(height: 12),
                     ...featured.asMap().entries.map((e) => _ResourceCard(
                         resource: e.value,
@@ -117,7 +128,9 @@ class _ResourcesScreenState extends ConsumerState<ResourcesScreen> {
                         onTap: () => _showDetail(context, e.value, lang))),
                     const SizedBox(height: 20),
                     Text(lang == 'sw' ? '📚 Zote' : '📚 All Resources',
-                        style: Theme.of(context).textTheme.headlineSmall),
+                        style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                          color: AppColors.textPrimary,
+                        )),
                     const SizedBox(height: 12),
                   ],
                   ...regular.asMap().entries.map((e) => _ResourceCard(
@@ -314,7 +327,12 @@ class _ResourceCard extends StatelessWidget {
                   lang == 'sw' && resource.titleSw != null
                       ? resource.titleSw
                       : resource.title,
-                  style: Theme.of(context).textTheme.titleMedium,
+                  style: const TextStyle(
+                    fontFamily: 'Nunito',
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textPrimary,
+                  ),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),

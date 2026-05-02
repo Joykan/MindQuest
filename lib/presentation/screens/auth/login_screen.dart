@@ -9,8 +9,6 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../providers/providers.dart';
-import '../../widgets/mq_button.dart';
-import '../../widgets/mq_text_field.dart';
 import '../../widgets/mq_snackbar.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
@@ -129,6 +127,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     });
 
     return Scaffold(
+      backgroundColor: AppColors.darkBackground,
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(28),
@@ -137,34 +136,49 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             child: Column(
               children: [
                 const SizedBox(height: 40),
-                // Logo
+
+                // ── Logo ────────────────────────────────────
                 Container(
                   width: 80,
                   height: 80,
                   decoration: BoxDecoration(
                     gradient: const LinearGradient(
-                        colors: [AppColors.primary, AppColors.secondary]),
+                      colors: [AppColors.primary, AppColors.primaryLight],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
                     borderRadius: BorderRadius.circular(24),
                   ),
                   child: const Center(
                       child: Text('🧠', style: TextStyle(fontSize: 44))),
                 ).animate().scale(curve: Curves.elasticOut),
                 const SizedBox(height: 20),
-                Text(_lang == 'sw' ? 'Karibu Tena!' : 'Welcome Back!',
-                        style: Theme.of(context).textTheme.displayMedium)
-                    .animate(delay: 200.ms)
-                    .fadeIn(),
+
+                // ── Title ────────────────────────────────────
+                Text(
+                  _lang == 'sw' ? 'Karibu Tena!' : 'Welcome Back!',
+                  style: const TextStyle(
+                    fontFamily: 'Nunito',
+                    fontSize: 28,
+                    fontWeight: FontWeight.w800,
+                    color: Colors.white,
+                  ),
+                ).animate(delay: 200.ms).fadeIn(),
                 const SizedBox(height: 8),
                 Text(
                   _lang == 'sw'
                       ? 'Endelea na safari yako ya afya ya akili'
                       : 'Continue your mental wellness journey',
-                  style: Theme.of(context).textTheme.bodyMedium,
+                  style: const TextStyle(
+                    fontFamily: 'Nunito',
+                    fontSize: 14,
+                    color: Color(0xFF8AAA9A),
+                  ),
                   textAlign: TextAlign.center,
                 ).animate(delay: 300.ms).fadeIn(),
                 const SizedBox(height: 32),
 
-                // Language toggle
+                // ── Language toggle ──────────────────────────
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -181,7 +195,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 ).animate(delay: 350.ms).fadeIn(),
                 const SizedBox(height: 28),
 
-                MQTextField(
+                // ── Email field ──────────────────────────────
+                _DarkTextField(
                   controller: _email,
                   label: _lang == 'sw' ? 'Barua Pepe' : 'Email',
                   hint: 'you@example.com',
@@ -195,16 +210,20 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 ).animate(delay: 400.ms).fadeIn(),
                 const SizedBox(height: 16),
 
-                MQTextField(
+                // ── Password field ───────────────────────────
+                _DarkTextField(
                   controller: _pass,
                   label: _lang == 'sw' ? 'Neno la Siri' : 'Password',
                   hint: '••••••••',
                   obscureText: _obscure,
                   prefixIcon: Icons.lock_outline,
                   suffixIcon: IconButton(
-                    icon: Icon(_obscure
-                        ? Icons.visibility_off_outlined
-                        : Icons.visibility_outlined),
+                    icon: Icon(
+                      _obscure
+                          ? Icons.visibility_off_outlined
+                          : Icons.visibility_outlined,
+                      color: const Color(0xFF8AAA9A),
+                    ),
                     onPressed: () => setState(() => _obscure = !_obscure),
                   ),
                   validator: (v) => (v ?? '').length >= 6
@@ -215,38 +234,66 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 ).animate(delay: 450.ms).fadeIn(),
                 const SizedBox(height: 28),
 
-                MQButton(
-                  label: _lang == 'sw' ? 'Ingia' : 'Sign In',
-                  onPressed: _login,
-                  isLoading: _loading,
+                // ── Sign In button ───────────────────────────
+                SizedBox(
                   width: double.infinity,
+                  height: 54,
+                  child: ElevatedButton(
+                    onPressed: _loading ? null : _login,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.white,
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14)),
+                    ),
+                    child: _loading
+                        ? const SizedBox(
+                            width: 22,
+                            height: 22,
+                            child: CircularProgressIndicator(
+                                color: Colors.white, strokeWidth: 2.5))
+                        : Text(
+                            _lang == 'sw' ? 'Ingia' : 'Sign In',
+                            style: const TextStyle(
+                              fontFamily: 'Nunito',
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                  ),
                 ).animate(delay: 500.ms).fadeIn(),
                 const SizedBox(height: 16),
 
-                // Divider
+                // ── Divider ──────────────────────────────────
                 Row(children: [
-                  const Expanded(child: Divider()),
+                  Expanded(
+                      child: Divider(color: Colors.white.withOpacity(0.12))),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 12),
                     child: Text(
                       _lang == 'sw' ? 'au' : 'or',
-                      style: Theme.of(context).textTheme.bodySmall,
+                      style: const TextStyle(
+                          fontFamily: 'Nunito',
+                          fontSize: 13,
+                          color: Color(0xFF8AAA9A)),
                     ),
                   ),
-                  const Expanded(child: Divider()),
+                  Expanded(
+                      child: Divider(color: Colors.white.withOpacity(0.12))),
                 ]).animate(delay: 510.ms).fadeIn(),
                 const SizedBox(height: 16),
 
-                // Google Sign-In
+                // ── Google Sign-In ───────────────────────────
                 SizedBox(
                   width: double.infinity,
-                  height: 52,
+                  height: 54,
                   child: OutlinedButton(
                     onPressed: _googleLoading ? null : _signInWithGoogle,
                     style: OutlinedButton.styleFrom(
-                      side: BorderSide(color: Colors.grey.shade300, width: 1.5),
+                      side: const BorderSide(color: Colors.white, width: 1.5),
                       shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16)),
+                          borderRadius: BorderRadius.circular(14)),
                       backgroundColor: Colors.white,
                     ),
                     child: _googleLoading
@@ -263,7 +310,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                 height: 24,
                                 decoration: BoxDecoration(
                                   borderRadius: BorderRadius.circular(4),
-                                  border: Border.all(color: Colors.grey.shade200),
+                                  border: Border.all(
+                                      color: Colors.grey.shade200),
                                 ),
                                 child: const Center(
                                   child: Text('G',
@@ -282,7 +330,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                   fontFamily: 'Nunito',
                                   fontSize: 15,
                                   fontWeight: FontWeight.w600,
-                                  color: AppColors.textPrimary,
+                                  color: Color(0xFF1A2B23),
                                 ),
                               ),
                             ],
@@ -291,69 +339,83 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 ).animate(delay: 520.ms).fadeIn(),
                 const SizedBox(height: 16),
 
-                // Privacy notice
+                // ── Privacy notice ───────────────────────────
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: AppColors.success.withOpacity(0.1),
+                    color: AppColors.darkSurface,
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                        color: AppColors.success.withOpacity(0.3)),
+                        color: AppColors.primary.withOpacity(0.3), width: 1),
                   ),
                   child: Row(children: [
                     const Icon(Icons.privacy_tip_outlined,
-                        color: AppColors.success, size: 18),
+                        color: AppColors.primaryLight, size: 18),
                     const SizedBox(width: 10),
                     Expanded(
                       child: Text(
                         _lang == 'sw'
                             ? '🔐 Data yako ni salama. Tunafuata Sheria ya Ulinzi wa Data ya Kenya 2019.'
                             : '🔐 Your data is safe. We comply with Kenya\'s Data Protection Act 2019.',
-                        style: TextStyle(
+                        style: const TextStyle(
                             fontFamily: 'Nunito',
                             fontSize: 11,
-                            color: AppColors.success.withOpacity(0.8)),
+                            color: Color(0xFF8AAA9A)),
                       ),
                     ),
                   ]),
                 ).animate(delay: 530.ms).fadeIn(),
                 const SizedBox(height: 16),
 
-                // Guest login
-                OutlinedButton(
-                  onPressed: _loading ? null : _loginAnonymously,
-                  style: OutlinedButton.styleFrom(
-                    minimumSize: const Size(double.infinity, 56),
-                    side: const BorderSide(color: AppColors.primary, width: 2),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16)),
-                  ),
-                  child: Text(
-                    _lang == 'sw' ? 'Endelea kama Mgeni' : 'Continue as Guest',
-                    style: const TextStyle(
-                      fontFamily: 'Nunito',
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.primary,
+                // ── Continue as Guest ────────────────────────
+                SizedBox(
+                  width: double.infinity,
+                  height: 54,
+                  child: OutlinedButton(
+                    onPressed: _loading ? null : _loginAnonymously,
+                    style: OutlinedButton.styleFrom(
+                      side: const BorderSide(
+                          color: AppColors.primaryLight, width: 1.5),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14)),
+                      foregroundColor: AppColors.primaryLight,
+                    ),
+                    child: Text(
+                      _lang == 'sw'
+                          ? 'Endelea kama Mgeni'
+                          : 'Continue as Guest',
+                      style: const TextStyle(
+                        fontFamily: 'Nunito',
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.primaryLight,
+                      ),
                     ),
                   ),
                 ).animate(delay: 550.ms).fadeIn(),
                 const SizedBox(height: 20),
 
+                // ── Sign Up link ─────────────────────────────
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                        _lang == 'sw'
-                            ? 'Huna akaunti? '
-                            : "Don't have an account? ",
-                        style: Theme.of(context).textTheme.bodyMedium),
+                      _lang == 'sw'
+                          ? 'Huna akaunti? '
+                          : "Don't have an account? ",
+                      style: const TextStyle(
+                          fontFamily: 'Nunito',
+                          fontSize: 14,
+                          color: Color(0xFF8AAA9A)),
+                    ),
                     GestureDetector(
                       onTap: () => context.go(AppRoutes.register),
                       child: const Text('Sign Up',
                           style: TextStyle(
-                              color: AppColors.primary,
-                              fontWeight: FontWeight.w700)),
+                              fontFamily: 'Nunito',
+                              color: AppColors.primaryLight,
+                              fontWeight: FontWeight.w700,
+                              fontSize: 14)),
                     ),
                   ],
                 ).animate(delay: 560.ms).fadeIn(),
@@ -366,6 +428,71 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
 }
 
+// ── Dark-themed text field ─────────────────────────────────────
+class _DarkTextField extends StatelessWidget {
+  final TextEditingController controller;
+  final String label;
+  final String? hint;
+  final bool obscureText;
+  final TextInputType keyboardType;
+  final IconData? prefixIcon;
+  final Widget? suffixIcon;
+  final String? Function(String?)? validator;
+
+  const _DarkTextField({
+    required this.controller,
+    required this.label,
+    this.hint,
+    this.obscureText = false,
+    this.keyboardType = TextInputType.text,
+    this.prefixIcon,
+    this.suffixIcon,
+    this.validator,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return TextFormField(
+      controller: controller,
+      obscureText: obscureText,
+      keyboardType: keyboardType,
+      validator: validator,
+      style: const TextStyle(
+          fontFamily: 'Nunito', color: Colors.white, fontSize: 15),
+      decoration: InputDecoration(
+        labelText: label,
+        hintText: hint,
+        filled: true,
+        fillColor: AppColors.darkInput,
+        labelStyle:
+            const TextStyle(fontFamily: 'Nunito', color: Color(0xFF8AAA9A)),
+        hintStyle:
+            const TextStyle(fontFamily: 'Nunito', color: Color(0xFF5A7A68)),
+        prefixIcon: prefixIcon != null
+            ? Icon(prefixIcon, color: const Color(0xFF8AAA9A), size: 20)
+            : null,
+        suffixIcon: suffixIcon,
+        border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(14),
+            borderSide: BorderSide.none),
+        enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(14),
+            borderSide: BorderSide.none),
+        focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(14),
+            borderSide:
+                const BorderSide(color: AppColors.primary, width: 1.5)),
+        errorBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(14),
+            borderSide: const BorderSide(color: AppColors.error, width: 1.5)),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+      ),
+    );
+  }
+}
+
+// ── Language chip ──────────────────────────────────────────────
 class _LangChip extends StatelessWidget {
   final String label;
   final bool selected;
@@ -381,15 +508,21 @@ class _LangChip extends StatelessWidget {
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
         decoration: BoxDecoration(
-          color: selected ? AppColors.primary : AppColors.surfaceVariant,
+          color: selected ? AppColors.primary : Colors.transparent,
           borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: selected
+                ? AppColors.primary
+                : AppColors.primaryLight.withOpacity(0.4),
+            width: 1.5,
+          ),
         ),
         child: Text(label,
             style: TextStyle(
                 fontFamily: 'Nunito',
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
-                color: selected ? Colors.white : AppColors.textSecondary)),
+                color: selected ? Colors.white : const Color(0xFF8AAA9A))),
       ),
     );
   }

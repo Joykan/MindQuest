@@ -19,6 +19,9 @@ class CrisisScreen extends ConsumerWidget {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
+          backgroundColor: AppColors.background,
+          titleTextStyle: const TextStyle(fontFamily: 'Nunito', fontSize: 20, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
+          iconTheme: const IconThemeData(color: AppColors.textPrimary),
           title: Text(lang == 'sw' ? 'Msaada wa Dharura' : 'Crisis Support')),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
@@ -110,16 +113,16 @@ class CrisisScreen extends ConsumerWidget {
                         child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
+                         Text(
                           lang == 'sw' && c.nameSw != null ? c.nameSw! : c.name,
-                          style: Theme.of(context).textTheme.titleMedium,
+                          style: const TextStyle(fontFamily: 'Nunito', fontSize: 15, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
                         ),
                         if (c.description != null)
                           Text(
                             lang == 'sw' && c.descriptionSw != null
                                 ? c.descriptionSw!
                                 : c.description!,
-                            style: Theme.of(context).textTheme.bodySmall,
+                            style: const TextStyle(fontFamily: 'Nunito', fontSize: 12, color: AppColors.textSecondary),
                             maxLines: 2,
                           ),
                         Row(children: [

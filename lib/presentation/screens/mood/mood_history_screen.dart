@@ -19,7 +19,11 @@ class MoodHistoryScreen extends ConsumerWidget {
     final analytics = ref.watch(moodAnalyticsProvider);
 
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
+          backgroundColor: Colors.white,
+          titleTextStyle: const TextStyle(fontFamily: 'Nunito', fontSize: 20, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
+          iconTheme: const IconThemeData(color: AppColors.textPrimary),
           title: Text(lang == 'sw' ? 'Historia ya Hisia' : 'Mood History')),
       body: history.when(
         loading: () => const Center(child: CircularProgressIndicator()),
@@ -36,7 +40,7 @@ class MoodHistoryScreen extends ConsumerWidget {
                     lang == 'sw'
                         ? 'Bado hakuna hisia zilizorekodiwa'
                         : 'No moods logged yet',
-                    style: Theme.of(context).textTheme.headlineSmall),
+                    style: const TextStyle(fontFamily: 'Nunito', fontSize: 18, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
               ],
             ));
           }
@@ -78,13 +82,13 @@ class MoodHistoryScreen extends ConsumerWidget {
                             lang == 'sw'
                                 ? 'Mwenendo wa Siku 30'
                                 : '30-Day Mood Trend',
-                            style: Theme.of(context).textTheme.titleLarge),
+                            style: const TextStyle(fontFamily: 'Nunito', fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
                         const SizedBox(height: 4),
                         Text(
                           lang == 'sw'
                               ? 'Wastani: ${(data['average'] as double).toStringAsFixed(1)}/5'
                               : 'Average: ${(data['average'] as double).toStringAsFixed(1)}/5',
-                          style: Theme.of(context).textTheme.bodyMedium,
+                          style: const TextStyle(fontFamily: 'Nunito', fontSize: 13, color: AppColors.textSecondary),
                         ),
                         const SizedBox(height: 16),
                         SizedBox(
@@ -126,7 +130,7 @@ class MoodHistoryScreen extends ConsumerWidget {
               // Log list
               Text(
                 lang == 'sw' ? 'Rekodi Zote' : 'All Entries',
-                style: Theme.of(context).textTheme.headlineSmall,
+                style: const TextStyle(fontFamily: 'Nunito', fontSize: 18, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
               ),
               const SizedBox(height: 12),
               ...logs.asMap().entries.map((e) {
@@ -172,14 +176,14 @@ class MoodHistoryScreen extends ConsumerWidget {
                         ),
                         if (log.note != null && log.note!.isNotEmpty)
                           Text(log.note!,
-                              style: Theme.of(context).textTheme.bodySmall,
+                              style: const TextStyle(fontFamily: 'Nunito', fontSize: 12, color: AppColors.textSecondary),
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis),
                         Text(
                           '${log.loggedAt.day}/${log.loggedAt.month}/${log.loggedAt.year}  '
                           '${log.loggedAt.hour.toString().padLeft(2, '0')}:'
                           '${log.loggedAt.minute.toString().padLeft(2, '0')}',
-                          style: Theme.of(context).textTheme.bodySmall,
+                          style: const TextStyle(fontFamily: 'Nunito', fontSize: 11, color: AppColors.textHint),
                         ),
                       ],
                     )),

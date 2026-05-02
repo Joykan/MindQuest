@@ -25,6 +25,7 @@ class ProfileScreen extends ConsumerWidget {
         AppColors.tierColors[stats?.tier ?? 'Newcomer'] ?? AppColors.primary;
 
     return Scaffold(
+      backgroundColor: Colors.white,
       body: CustomScrollView(
         slivers: [
           // ── App bar ───────────────────────────────────
@@ -117,9 +118,9 @@ class ProfileScreen extends ConsumerWidget {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(lang == 'sw' ? 'Maendeleo ya XP' : 'XP Progress',
-                              style: Theme.of(context).textTheme.titleMedium),
+                              style: const TextStyle(fontFamily: 'Nunito', fontSize: 15, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
                           Text('${stats.xp} / ${stats.level * 500} XP',
-                              style: Theme.of(context).textTheme.bodySmall),
+                              style: const TextStyle(fontFamily: 'Nunito', fontSize: 12, color: AppColors.textSecondary)),
                         ],
                       ),
                       const SizedBox(height: 10),
@@ -133,11 +134,11 @@ class ProfileScreen extends ConsumerWidget {
                         ),
                       ),
                       const SizedBox(height: 6),
-                      Text(
+                       Text(
                         lang == 'sw'
                             ? '${stats.xpToNextLevel} XP hadi ngazi inayofuata'
                             : '${stats.xpToNextLevel} XP to next level',
-                        style: Theme.of(context).textTheme.bodySmall,
+                        style: const TextStyle(fontFamily: 'Nunito', fontSize: 12, color: AppColors.textSecondary),
                       ),
                     ]),
                   ).animate().fadeIn(),
@@ -186,11 +187,11 @@ class ProfileScreen extends ConsumerWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
+                       Text(
                           lang == 'sw'
                               ? '🏅 Tuzo za Hivi Karibuni'
                               : '🏅 Recent Badges',
-                          style: Theme.of(context).textTheme.headlineSmall),
+                          style: const TextStyle(fontFamily: 'Nunito', fontSize: 18, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
                       TextButton(
                         onPressed: () => context.go(AppRoutes.badges),
                         child: Text(lang == 'sw' ? 'Zote' : 'See All',
@@ -242,7 +243,7 @@ class ProfileScreen extends ConsumerWidget {
 
                 // Settings tiles
                 Text(lang == 'sw' ? '⚙️ Mipangilio' : '⚙️ Settings',
-                    style: Theme.of(context).textTheme.headlineSmall),
+                    style: const TextStyle(fontFamily: 'Nunito', fontSize: 18, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
                 const SizedBox(height: 12),
 
                 // Language
@@ -437,9 +438,9 @@ class _SettingsTile extends StatelessWidget {
           child: Row(children: [
             Text(icon, style: const TextStyle(fontSize: 22)),
             const SizedBox(width: 14),
-            Expanded(
-                child: Text(title,
-                    style: Theme.of(context).textTheme.titleMedium)),
+              Expanded(
+                  child: Text(title,
+                      style: const TextStyle(fontFamily: 'Nunito', fontSize: 15, fontWeight: FontWeight.w600, color: AppColors.textPrimary))),
             trailing ??
                 const Icon(Icons.arrow_forward_ios_rounded,
                     size: 14, color: AppColors.textHint),

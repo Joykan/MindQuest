@@ -17,7 +17,12 @@ class QuestsScreen extends ConsumerWidget {
     final quests = ref.watch(userQuestsProvider);
 
     return Scaffold(
-      appBar: AppBar(title: Text(lang == 'sw' ? 'Dhamira Zangu' : 'My Quests')),
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        titleTextStyle: const TextStyle(fontFamily: 'Nunito', fontSize: 20, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
+        iconTheme: const IconThemeData(color: AppColors.textPrimary),
+        title: Text(lang == 'sw' ? 'Dhamira Zangu' : 'My Quests')),
       body: quests.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(child: Text('Error: $e')),
@@ -32,13 +37,13 @@ class QuestsScreen extends ConsumerWidget {
                     .scale(curve: Curves.elasticOut),
                 const SizedBox(height: 20),
                 Text(lang == 'sw' ? 'Bado hakuna dhamira' : 'No quests yet',
-                    style: Theme.of(context).textTheme.headlineSmall),
+                    style: const TextStyle(fontFamily: 'Nunito', fontSize: 18, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
                 const SizedBox(height: 8),
                 Text(
                   lang == 'sw'
                       ? 'Dhamira zitaonekana hapa ukianza kutumia app'
                       : 'Quests will appear as you use the app',
-                  style: Theme.of(context).textTheme.bodyMedium,
+                  style: const TextStyle(fontFamily: 'Nunito', fontSize: 14, color: AppColors.textSecondary),
                   textAlign: TextAlign.center,
                 ),
               ],
@@ -77,7 +82,7 @@ class QuestsScreen extends ConsumerWidget {
 
               if (active.isNotEmpty) ...[
                 Text(lang == 'sw' ? '🎯 Zinaendelea' : '🎯 Active Quests',
-                    style: Theme.of(context).textTheme.headlineSmall),
+                    style: const TextStyle(fontFamily: 'Nunito', fontSize: 18, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
                 const SizedBox(height: 12),
                 ...active.asMap().entries.map(
                     (e) => _QuestCard(quest: e.value, lang: lang, i: e.key)),
@@ -86,7 +91,7 @@ class QuestsScreen extends ConsumerWidget {
 
               if (completed.isNotEmpty) ...[
                 Text(lang == 'sw' ? '✅ Zilizokamilika' : '✅ Completed',
-                    style: Theme.of(context).textTheme.headlineSmall),
+                    style: const TextStyle(fontFamily: 'Nunito', fontSize: 18, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
                 const SizedBox(height: 12),
                 ...completed.asMap().entries.map(
                     (e) => _QuestCard(quest: e.value, lang: lang, i: e.key)),
@@ -151,14 +156,14 @@ class _QuestCard extends StatelessWidget {
               lang == 'sw' && quest.titleSw != null
                   ? quest.titleSw
                   : quest.title,
-              style: Theme.of(context).textTheme.titleMedium,
+              style: const TextStyle(fontFamily: 'Nunito', fontSize: 15, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
             ),
             if (quest.description != null)
               Text(
                 lang == 'sw' && quest.descriptionSw != null
                     ? quest.descriptionSw
                     : quest.description,
-                style: Theme.of(context).textTheme.bodySmall,
+                style: const TextStyle(fontFamily: 'Nunito', fontSize: 12, color: AppColors.textSecondary),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),

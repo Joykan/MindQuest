@@ -32,7 +32,10 @@ class HomeShell extends ConsumerWidget {
         decoration: BoxDecoration(
           color: Colors.white,
           boxShadow: [
-            BoxShadow(color: Colors.black.withOpacity(0.06), blurRadius: 20)
+            BoxShadow(
+                color: Colors.black.withOpacity(0.07),
+                blurRadius: 16,
+                offset: const Offset(0, -2))
           ],
         ),
         child: SafeArea(
@@ -41,23 +44,18 @@ class HomeShell extends ConsumerWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                _NavItem(Icons.home_rounded, lang == 'sw' ? 'Nyumbani' : 'Home',
-                    idx == 0, () => context.go(AppRoutes.home)),
-                _NavItem(
-                    Icons.chat_bubble_rounded,
-                    lang == 'sw' ? 'Chat' : 'Chat',
-                    idx == 1,
+                _NavItem(Icons.home_rounded,
+                    lang == 'sw' ? 'Nyumbani' : 'Home', idx == 0,
+                    () => context.go(AppRoutes.home)),
+                _NavItem(Icons.chat_bubble_rounded,
+                    lang == 'sw' ? 'Chat' : 'Chat', idx == 1,
                     () => context.go(AppRoutes.chat)),
                 _CenterNav(idx == 2, () => context.go(AppRoutes.mood)),
-                _NavItem(
-                    Icons.explore_rounded,
-                    lang == 'sw' ? 'Dhamira' : 'Quests',
-                    idx == 3,
+                _NavItem(Icons.explore_rounded,
+                    lang == 'sw' ? 'Dhamira' : 'Quests', idx == 3,
                     () => context.go(AppRoutes.quests)),
-                _NavItem(
-                    Icons.person_rounded,
-                    lang == 'sw' ? 'Mimi' : 'Profile',
-                    idx == 4,
+                _NavItem(Icons.person_rounded,
+                    lang == 'sw' ? 'Mimi' : 'Profile', idx == 4,
                     () => context.go(AppRoutes.profile)),
               ],
             ),
@@ -83,13 +81,13 @@ class _NavItem extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           decoration: BoxDecoration(
             color: selected
-                ? AppColors.primaryLight.withOpacity(0.3)
+                ? AppColors.primary.withOpacity(0.1)
                 : Colors.transparent,
             borderRadius: BorderRadius.circular(14),
           ),
           child: Column(mainAxisSize: MainAxisSize.min, children: [
             Icon(icon,
-                color: selected ? AppColors.primary : AppColors.textHint,
+                color: selected ? AppColors.primary : const Color(0xFFBDBDBD),
                 size: 22),
             const SizedBox(height: 2),
             Text(label,
@@ -97,7 +95,9 @@ class _NavItem extends StatelessWidget {
                     fontFamily: 'Nunito',
                     fontSize: 10,
                     fontWeight: FontWeight.w600,
-                    color: selected ? AppColors.primary : AppColors.textHint)),
+                    color: selected
+                        ? AppColors.primary
+                        : const Color(0xFFBDBDBD))),
           ]),
         ),
       );
@@ -116,19 +116,14 @@ class _CenterNav extends StatelessWidget {
           width: 56,
           height: 56,
           decoration: BoxDecoration(
-            gradient: LinearGradient(
-                colors: selected
-                    ? [AppColors.primary, AppColors.secondary]
-                    : [AppColors.primaryLight, AppColors.secondaryLight]),
+            color: selected ? AppColors.primary : AppColors.navButton,
             borderRadius: BorderRadius.circular(18),
-            boxShadow: selected
-                ? [
-                    BoxShadow(
-                        color: AppColors.primary.withOpacity(0.4),
-                        blurRadius: 12,
-                        offset: const Offset(0, 4))
-                  ]
-                : [],
+            boxShadow: [
+              BoxShadow(
+                  color: AppColors.primary.withOpacity(selected ? 0.4 : 0.2),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4))
+            ],
           ),
           child: const Icon(Icons.mood_rounded, color: Colors.white, size: 26),
         ),

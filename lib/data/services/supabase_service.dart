@@ -247,23 +247,112 @@ class SupabaseService {
     }).toList();
   }
 
-  // ── Quests ───────────────────────────────────────────────
-  Future<List<Quest>> getUserQuests(String userId) async {
-    final d = await _db
-        .from('user_quests')
-        .select('*, quests(*)')
-        .eq('user_id', userId);
-    return (d as List)
-        .map((e) => Quest.fromJson({
-              ...e['quests'],
-              'status': e['status'],
-              'progress': e['progress'],
-              'completed_at': e['completed_at'],
-            }))
-        .toList();
+  // ── Quest Progress ───────────────────────────────────────
+  /// Upserts progress for a quest. Auto-completes the quest when progress >= 100.
+  Future<void> updateQuestProgress({
+    required String userId,
+    required String questId,
+    required int progress,
+  }) async {
+    final clamped = progress.clamp(0, 100);
+    final status = clamped >= 100 ? 'completed' : 'in_progress';
+    await _db.from('user_quests').upsert({
+      'user_id': userId,
+      'quest_id': questId,
+      'progress': clamped,
+      'status': status,
+      if (status == 'completed') 'completed_at': DateTime.now().toIso8601String(),
+    }, onConflict: 'user_id,quest_id');
   }
 
-  // ── Resources ────────────────────────────────────────────
+  /// Returns current progress (0-100) for a single quest, or 0 if not started.
+  Future<int> getUserQuestProgress(String userId, String questId) async {
+    final d = await _db
+        .from('user_quests')
+        .select('progress')
+        .eq('user_id', userId)
+        .eq('quest_id', questId)
+        .maybeSingle();
+    return (d?['progress'] as int?) ?? 0;
+  }
+
+  /// Count total mood logs for this user.
+  Future<int> getMoodLogsCount(String userId) async {
+    final d = await _db
+        .from('mood_logs')
+        .select('id', const FetchOptions(count: CountOption.exact, head: true))
+        .eq('user_id', userId);
+    return (d as dynamic).count as int? ?? 0;
+  }
+
+  /// Count total completed daily check-ins for this user.
+  Future<int> getCheckinCount(String userId) async {
+    final d = await _db
+        .from('daily_checkins')
+        .select('id', const FetchOptions(count: CountOption.exact, head: true))
+        .eq('user_id', userId)
+        .eq('completed', true);
+    return (d as dynamic).count as int? ?? 0;
+  }
+
+  /// Count total chat sessions for this user.
+  Future<int> getChatSessionCount(String userId) async {
+    final d = await _db
+        .from('chat_sessions')
+        .select('id', const FetchOptions(count: CountOption.exact, head: true))
+        .eq('user_id', userId);
+    return (d as dynamic).count as int? ?? 0;
+  }
+
+  /// Whether the user has read at least one resource (via interactions table).
+  Future<bool> hasReadResource(String userId) async {
+    final d = await _db
+        .from('user_resource_interactions')
+        .select('id')
+        .eq('user_id', userId)
+        .limit(1)
+        .maybeSingle();
+    return d != null;
+  }
+
+  /// Record that user read a resource.
+  Future<void> recordResourceRead(String userId, String resourceId) async {
+    await _db.from('user_resource_interactions').upsert({
+      'user_id': userId,
+      'resource_id': resourceId,
+      'interaction_type': 'read',
+    }, onConflict: 'user_id,resource_id');
+  }
+
+  /// Stream of user quests for real-time updates.
+  Stream<List<Quest>> streamUserQuests(String userId) {
+    return _db
+        .from('user_quests')
+        .stream(primaryKey: ['id'])
+        .eq('user_id', userId)
+        .asyncMap((rows) async {
+          if (rows.isEmpty) return <Quest>[];
+          // Fetch quest definitions for each row
+          final questIds = rows.map((r) => r['quest_id'] as String).toList();
+          final defs = await _db
+              .from('quests')
+              .select()
+              .inFilter('id', questIds);
+          final defMap = {for (final d in defs as List) d['id']: d};
+          return rows.map((r) {
+            final def = defMap[r['quest_id']];
+            if (def == null) return null;
+            return Quest.fromJson({
+              ...def,
+              'status': r['status'],
+              'progress': r['progress'],
+              'completed_at': r['completed_at'],
+            });
+          }).whereType<Quest>().toList();
+        });
+  }
+}
+
   Future<List<Resource>> getResources({String? category}) async {
     var q = _db.from('resources').select();
     if (category != null) q = q.eq('category', category);

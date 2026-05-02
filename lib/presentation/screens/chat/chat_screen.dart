@@ -85,7 +85,11 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     ref.listen(chatProvider, (_, __) => _scrollToBottom());
 
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
+        backgroundColor: Colors.white,
+        titleTextStyle: const TextStyle(fontFamily: 'Nunito', fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
+        iconTheme: const IconThemeData(color: AppColors.textPrimary),
         title: Row(mainAxisSize: MainAxisSize.min, children: [
           Container(
             width: 36,
@@ -544,7 +548,7 @@ class _EmptyState extends StatelessWidget {
             lang == 'sw'
                 ? 'Habari! Mimi ni MindQuest 👋'
                 : 'Hey! I\'m MindQuest 👋',
-            style: Theme.of(context).textTheme.headlineSmall),
+            style: Theme.of(context).textTheme.headlineSmall?.copyWith(color: AppColors.textPrimary)),
         const SizedBox(height: 8),
         Text(
           lang == 'sw'

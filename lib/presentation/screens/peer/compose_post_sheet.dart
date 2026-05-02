@@ -1,324 +1,149 @@
-// lib/data/services/peer_support_service.dart
+// lib/presentation/screens/peer/compose_post_sheet.dart
 //
-// Supabase data layer for the anonymous Peer Support Forum.
+// Bottom sheet for composing new peer support posts.
 
-import 'package:supabase_flutter/supabase_flutter.dart';
-import '../models/peer_models.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../data/models/peer_models.dart';
+import '../../../../data/services/peer_support_service.dart';
 
-class PeerSupportService {
-  static final PeerSupportService _i = PeerSupportService._();
-  factory PeerSupportService() => _i;
-  PeerSupportService._();
+final _service = PeerSupportService();
 
-  SupabaseClient get _db => Supabase.instance.client;
+final selectedCategoryProvider = StateProvider<String>((ref) => 'general');
 
-  // ── Posts ─────────────────────────────────────────────────────────────────
+class ComposePostSheet extends ConsumerStatefulWidget {
+  final String userId;
+  final AnonymousIdentity identity;
 
-  Future<List<PeerPost>> getPosts({
-    String? category,
-    int limit = 25,
-    int offset = 0,
-    String? currentUserId,
-  }) async {
-    try {
-      var query = _db
-          .from('peer_posts')
-          .select('*, peer_hugs(user_id)')
-          .eq('is_approved', true)
-          .eq('is_flagged', false)
-          .order('created_at', ascending: false)
-          .range(offset, offset + limit - 1);
+  const ComposePostSheet({
+    super.key,
+    required this.userId,
+    required this.identity,
+  });
 
-      if (category != null) query = query.eq('category', category);
+  @override
+  ConsumerState<ComposePostSheet> createState() => _ComposePostSheetState();
+}
 
-      final data = await query;
-      return (data as List).map((row) {
-        final post = PeerPost.fromJson(row as Map<String, dynamic>);
-        if (currentUserId != null) {
-          final hugs = row['peer_hugs'] as List? ?? [];
-          post.hasHugged = hugs.any((h) => h['user_id'] == currentUserId);
-        }
-        return post;
-      }).toList();
-    } catch (_) {
-      return _seedPosts();
-    }
+class _ComposePostSheetState extends ConsumerState<ComposePostSheet> {
+  final _contentController = TextEditingController();
+  final _tagsController = TextEditingController();
+  String _selectedCategory = 'general';
+  bool _isLoading = false;
+  bool _hasCrisis = false;
+
+  @override
+  void dispose() {
+    _contentController.dispose();
+    _tagsController.dispose();
+    super.dispose();
   }
 
-  Future<PeerPost> createPost({
-    required String userId,
-    required String anonHandle,
-    required String anonAvatar,
-    required String content,
-    required String language,
-    required String category,
-    required List<String> tags,
-    required bool hasCrisis,
-    required bool isFlagged,
-  }) async {
+  Future<void> _submit() async {
+    if (_contentController.text.trim().isEmpty) return;
+    setState(() => _isLoading = true);
+
     try {
-      final row = await _db
-          .from('peer_posts')
-          .insert({
-            'user_id': userId,
-            'anon_handle': anonHandle,
-            'anon_avatar': anonAvatar,
-            'content': content,
-            'language': language,
-            'category': category,
-            'tags': tags,
-            'has_crisis': hasCrisis,
-            'is_flagged': isFlagged,
-            'is_approved': !isFlagged && !hasCrisis,
-            'hug_count': 0,
-            'reply_count': 0,
-          })
-          .select()
-          .single();
-      return PeerPost.fromJson(row as Map<String, dynamic>);
-    } catch (_) {
-      // Offline fallback — return local post
-      return PeerPost(
-        id: 'local_${DateTime.now().millisecondsSinceEpoch}',
-        userId: userId,
-        anonHandle: anonHandle,
-        anonAvatar: anonAvatar,
-        content: content,
-        language: language,
-        category: category,
+      final tags = _tagsController.text
+          .split(',')
+          .map((t) => t.trim())
+          .where((t) => t.isNotEmpty)
+          .toList();
+
+      await _service.createPost(
+        userId: widget.userId,
+        anonHandle: widget.identity.handle,
+        anonAvatar: widget.identity.avatar,
+        content: _contentController.text.trim(),
+        language: 'en',
+        category: _selectedCategory,
         tags: tags,
-        hasCrisis: hasCrisis,
-        isFlagged: isFlagged,
-        isApproved: !isFlagged && !hasCrisis,
-        createdAt: DateTime.now(),
+        hasCrisis: _hasCrisis,
+        isFlagged: false,
       );
+
+      if (mounted) Navigator.pop(context, true);
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
-  Future<void> reportPost({
-    required String postId,
-    required String userId,
-    required String reason,
-  }) async {
-    try {
-      await _db.from('peer_reports').upsert({
-        'post_id': postId,
-        'reporter_id': userId,
-        'reason': reason,
-      });
-      await _db
-          .from('peer_posts')
-          .update({'is_flagged': true}).eq('id', postId);
-    } catch (_) {}
-  }
-
-  // ── Hugs (upvotes) ────────────────────────────────────────────────────────
-
-  Future<void> hugPost({required String postId, required String userId}) async {
-    try {
-      await _db.from('peer_hugs').upsert({'post_id': postId, 'user_id': userId});
-      await _db.rpc('increment_peer_hugs', params: {'p_post_id': postId});
-    } catch (_) {}
-  }
-
-  Future<void> unHugPost({required String postId, required String userId}) async {
-    try {
-      await _db.from('peer_hugs').delete().eq('post_id', postId).eq('user_id', userId);
-      await _db.rpc('decrement_peer_hugs', params: {'p_post_id': postId});
-    } catch (_) {}
-  }
-
-  // ── Replies ───────────────────────────────────────────────────────────────
-
-  Future<List<PeerReply>> getReplies(
-    String postId, {
-    String? currentUserId,
-  }) async {
-    try {
-      final data = await _db
-          .from('peer_replies')
-          .select('*, peer_reply_hugs(user_id)')
-          .eq('post_id', postId)
-          .eq('is_approved', true)
-          .order('created_at');
-
-      return (data as List).map((row) {
-        final reply = PeerReply.fromJson(row as Map<String, dynamic>);
-        if (currentUserId != null) {
-          final hugs = row['peer_reply_hugs'] as List? ?? [];
-          reply.hasHugged = hugs.any((h) => h['user_id'] == currentUserId);
-        }
-        return reply;
-      }).toList();
-    } catch (_) {
-      return [];
-    }
-  }
-
-  Future<PeerReply> createReply({
-    required String postId,
-    required String userId,
-    required String anonHandle,
-    required String anonAvatar,
-    required String content,
-    required String language,
-    required bool hasCrisis,
-    required bool isFlagged,
-  }) async {
-    try {
-      final row = await _db
-          .from('peer_replies')
-          .insert({
-            'post_id': postId,
-            'user_id': userId,
-            'anon_handle': anonHandle,
-            'anon_avatar': anonAvatar,
-            'content': content,
-            'language': language,
-            'has_crisis': hasCrisis,
-            'is_flagged': isFlagged,
-            'is_approved': !isFlagged && !hasCrisis,
-            'hug_count': 0,
-          })
-          .select()
-          .single();
-
-      await _db.rpc('increment_peer_reply_count', params: {'p_post_id': postId});
-      return PeerReply.fromJson(row as Map<String, dynamic>);
-    } catch (_) {
-      return PeerReply(
-        id: 'local_${DateTime.now().millisecondsSinceEpoch}',
-        postId: postId,
-        userId: userId,
-        anonHandle: anonHandle,
-        anonAvatar: anonAvatar,
-        content: content,
-        language: language,
-        isApproved: !isFlagged,
-        createdAt: DateTime.now(),
-      );
-    }
-  }
-
-  Future<void> hugReply({required String replyId, required String userId}) async {
-    try {
-      await _db.from('peer_reply_hugs').upsert({'reply_id': replyId, 'user_id': userId});
-      await _db.rpc('increment_peer_reply_hugs', params: {'p_reply_id': replyId});
-    } catch (_) {}
-  }
-
-  Future<void> unHugReply({required String replyId, required String userId}) async {
-    try {
-      await _db.from('peer_reply_hugs').delete().eq('reply_id', replyId).eq('user_id', userId);
-      await _db.rpc('decrement_peer_reply_hugs', params: {'p_reply_id': replyId});
-    } catch (_) {}
-  }
-
-  // ── Real-time ─────────────────────────────────────────────────────────────
-
-  RealtimeChannel subscribeToNewPosts(void Function(PeerPost) onNew) {
-    return _db
-        .channel('peer_posts_live')
-        .onPostgresChanges(
-          event: PostgresChangeEvent.insert,
-          schema: 'public',
-          table: 'peer_posts',
-          filter: PostgresChangeFilter(
-            type: FilterType.eq,
-            column: 'is_approved',
-            value: true,
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: EdgeInsets.only(
+        left: 16,
+        right: 16,
+        top: 16,
+        bottom: MediaQuery.of(context).viewInsets.bottom + 16,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Text(widget.identity.avatar,
+                  style: const TextStyle(fontSize: 24)),
+              const SizedBox(width: 8),
+              Text(widget.identity.handle,
+                  style: Theme.of(context).textTheme.titleMedium),
+              const Spacer(),
+              TextButton(
+                onPressed: _contentController.text.trim().isEmpty || _isLoading
+                    ? null
+                    : _submit,
+                child: _isLoading
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2))
+                    : const Text('Post'),
+              ),
+            ],
           ),
-          callback: (payload) {
-            try {
-              onNew(PeerPost.fromJson(payload.newRecord as Map<String, dynamic>));
-            } catch (_) {}
-          },
-        )
-        .subscribe();
+          const SizedBox(height: 16),
+          TextField(
+            controller: _contentController,
+            maxLines: 5,
+            decoration: const InputDecoration(
+              hintText: "Share what's on your mind...",
+              border: OutlineInputBorder(),
+            ),
+            onChanged: (_) => setState(() {}),
+          ),
+          const SizedBox(height: 12),
+          TextField(
+            controller: _tagsController,
+            decoration: const InputDecoration(
+              hintText: "Tags (comma separated)",
+              border: OutlineInputBorder(),
+            ),
+          ),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 8,
+            children: kPeerCategories
+                .map((c) => ChoiceChip(
+                      label: Text('${c.emoji} ${c.labelEn}'),
+                      selected: _selectedCategory == c.id,
+                      onSelected: (s) =>
+                          setState(() => _selectedCategory = c.id),
+                    ))
+                .toList(),
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Checkbox(
+                value: _hasCrisis,
+                onChanged: (v) => setState(() => _hasCrisis = v ?? false),
+              ),
+              const Text('I need crisis support'),
+            ],
+          ),
+        ],
+      ),
+    );
   }
-
-  // ── Seed data (offline / empty DB fallback) ───────────────────────────────
-
-  List<PeerPost> _seedPosts() => [
-        PeerPost(
-          id: 'seed_1',
-          userId: 'anon',
-          anonHandle: 'Brave Lion',
-          anonAvatar: '🦁',
-          content:
-              "I failed my KCSE mock and my parents don't know yet. The guilt is eating me "
-              'alive. Has anyone been through this?',
-          language: 'en',
-          category: 'school',
-          tags: ['KCSE', 'family', 'guilt'],
-          hugCount: 14,
-          replyCount: 6,
-          isApproved: true,
-          createdAt: DateTime.now().subtract(const Duration(hours: 3)),
-        ),
-        PeerPost(
-          id: 'seed_2',
-          userId: 'anon',
-          anonHandle: 'Gentle Crane',
-          anonAvatar: '🦅',
-          content:
-              'Nimefika siku 7 bila kulala vizuri. Kila usiku mawazo yanakuja kama mafuriko. '
-              'Naweza kupumzika vipi?',
-          language: 'sw',
-          category: 'anxiety',
-          tags: ['usingizi', 'wasiwasi'],
-          hugCount: 9,
-          replyCount: 4,
-          isApproved: true,
-          createdAt: DateTime.now().subtract(const Duration(hours: 7)),
-        ),
-        PeerPost(
-          id: 'seed_3',
-          userId: 'anon',
-          anonHandle: 'Hopeful Dolphin',
-          anonAvatar: '🐬',
-          content:
-              "Small win: I finally told my mum I've been struggling with anxiety. "
-              "She didn't fully understand but she hugged me. That was enough for today. 💙",
-          language: 'en',
-          category: 'celebration',
-          tags: ['family', 'progress'],
-          hugCount: 31,
-          replyCount: 12,
-          isApproved: true,
-          createdAt: DateTime.now().subtract(const Duration(hours: 11)),
-        ),
-        PeerPost(
-          id: 'seed_4',
-          userId: 'anon',
-          anonHandle: 'Calm Elephant',
-          anonAvatar: '🐘',
-          content:
-              "When the pressure to hustle gets too heavy, I take a 10-minute walk without "
-              "my phone. It sounds basic but it genuinely resets me. What's your go-to coping tip?",
-          language: 'en',
-          category: 'coping',
-          tags: ['hustle', 'stress', 'tips'],
-          hugCount: 22,
-          replyCount: 8,
-          isApproved: true,
-          createdAt: DateTime.now().subtract(const Duration(days: 1)),
-        ),
-        PeerPost(
-          id: 'seed_5',
-          userId: 'anon',
-          anonHandle: 'Quiet Owl',
-          anonAvatar: '🦉',
-          content:
-              'Familia yangu inategemea mimi sana kiuchumi na sina hata miaka 23. '
-              'Ninajisikia mzigo lakini pia ninawapenda. Ni hali ngumu sana.',
-          language: 'sw',
-          category: 'family',
-          tags: ['pesa', 'mzigo', 'familia'],
-          hugCount: 17,
-          replyCount: 5,
-          isApproved: true,
-          createdAt: DateTime.now().subtract(const Duration(days: 2)),
-        ),
-      ];
 }

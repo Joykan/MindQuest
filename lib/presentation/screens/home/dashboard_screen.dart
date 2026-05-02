@@ -22,21 +22,21 @@ class DashboardScreen extends ConsumerWidget {
     final userBadges = ref.watch(userBadgesProvider).valueOrNull ?? [];
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Colors.white,
       body: CustomScrollView(
         physics: const BouncingScrollPhysics(),
         slivers: [
-          // ── Header ──────────────────────────────────────
+          // ── Header ──────────────────────────────────────────
           SliverToBoxAdapter(
             child: Container(
               decoration: const BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [AppColors.primary, AppColors.secondary],
+                  colors: [Color(0xFF6B5FAF), AppColors.secondary],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
               ),
-              padding: const EdgeInsets.fromLTRB(24, 32, 24, 28),
+              padding: const EdgeInsets.fromLTRB(24, 48, 24, 28),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -67,7 +67,6 @@ class DashboardScreen extends ConsumerWidget {
                     ],
                   ),
                   const SizedBox(height: 16),
-                  // Tagline
                   Text(
                     lang == 'sw'
                         ? 'Safari yako ya afya ya akili'
@@ -80,17 +79,17 @@ class DashboardScreen extends ConsumerWidget {
                   const SizedBox(height: 6),
                   Text(
                     lang == 'sw'
-                        ? 'Jifunze kila siku'
-                        : 'Level up your mental wellness\nevery day',
+                        ? 'Jifunze kila siku ⭐'
+                        : 'Level up every day ⭐',
                     style: const TextStyle(
                         fontFamily: 'Nunito',
-                        fontSize: 20,
+                        fontSize: 22,
                         fontWeight: FontWeight.w800,
                         color: Colors.white),
                   ),
-                  const SizedBox(height: 20),
-                  // Tier & Streak badges
+                  // XP Progress
                   if (stats != null) ...[
+                    const SizedBox(height: 20),
                     Row(
                       children: [
                         Container(
@@ -102,9 +101,11 @@ class DashboardScreen extends ConsumerWidget {
                           ),
                           child: Row(
                             children: [
-                              const Text('🔥', style: TextStyle(fontSize: 14)),
+                              const Text('🔥',
+                                  style: TextStyle(fontSize: 14)),
                               const SizedBox(width: 6),
-                              Text('${stats.tier} • Level ${stats.level}',
+                              Text(
+                                  '${stats.tier} • Lv.${stats.level}',
                                   style: const TextStyle(
                                       color: Colors.white,
                                       fontFamily: 'Nunito',
@@ -123,7 +124,8 @@ class DashboardScreen extends ConsumerWidget {
                           ),
                           child: Row(
                             children: [
-                              const Text('🔥', style: TextStyle(fontSize: 14)),
+                              const Text('🔥',
+                                  style: TextStyle(fontSize: 14)),
                               const SizedBox(width: 6),
                               Text('${stats.streakDays}-day streak',
                                   style: const TextStyle(
@@ -136,43 +138,16 @@ class DashboardScreen extends ConsumerWidget {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 16),
-                    // XP Progress
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              '${stats.xp} / ${(stats.level * 500)}',
-                              style: const TextStyle(
-                                  color: Colors.white,
-                                  fontFamily: 'Nunito',
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 12),
-                            ),
-                            Text(
-                              '${((stats.level + 1) * 500) - stats.xp} XP to ${_getNextTier(stats.tier)}',
-                              style: const TextStyle(
-                                  color: Colors.white70,
-                                  fontFamily: 'Nunito',
-                                  fontSize: 11),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 8),
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(6),
-                          child: LinearProgressIndicator(
-                            value: stats.levelProgress,
-                            backgroundColor: Colors.white.withOpacity(0.3),
-                            valueColor:
-                                const AlwaysStoppedAnimation(Color(0xFF4FB3B3)),
-                            minHeight: 6,
-                          ),
-                        ),
-                      ],
+                    const SizedBox(height: 12),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(6),
+                      child: LinearProgressIndicator(
+                        value: stats.levelProgress,
+                        backgroundColor: Colors.white.withOpacity(0.3),
+                        valueColor: const AlwaysStoppedAnimation(
+                            AppColors.primaryLight),
+                        minHeight: 6,
+                      ),
                     ),
                   ],
                 ],
@@ -184,31 +159,40 @@ class DashboardScreen extends ConsumerWidget {
             padding: const EdgeInsets.fromLTRB(20, 20, 20, 120),
             sliver: SliverList(
               delegate: SliverChildListDelegate([
-                // Daily check-in prompt
+                // ── Daily check-in prompt ──────────────────────
                 if (checkin == null) ...[
                   _DailyCheckinCard(lang: lang),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 16),
                 ],
 
-                // Quick crisis support banner
+                // ── Crisis support banner ──────────────────────
                 _QuickCrisisSupportCard(lang: lang),
                 const SizedBox(height: 20),
 
-                // Stats row
+                // ── Stats row ─────────────────────────────────
                 if (stats != null) ...[
                   _StatsRow(
-                      stats: stats, badgeCount: userBadges.length, lang: lang),
+                      stats: stats,
+                      badgeCount: userBadges.length,
+                      lang: lang),
                   const SizedBox(height: 24),
                 ],
 
-                // Quick actions
-                Text(lang == 'sw' ? 'Vitendo vya Haraka' : 'Quick Actions',
-                    style: Theme.of(context).textTheme.headlineSmall),
+                // ── Quick actions grid ─────────────────────────
+                Text(
+                    lang == 'sw' ? 'Vitendo vya Haraka' : 'Quick Actions',
+                    style: const TextStyle(
+                      fontFamily: 'Nunito',
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 0.3,
+                      color: AppColors.textPrimary,
+                    )),
                 const SizedBox(height: 12),
                 _QuickActions(lang: lang),
                 const SizedBox(height: 24),
 
-                // This week's mood
+                // ── This week ─────────────────────────────────
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -218,7 +202,7 @@ class DashboardScreen extends ConsumerWidget {
                             fontSize: 12,
                             fontWeight: FontWeight.w700,
                             letterSpacing: 0.5,
-                            color: Colors.white54)),
+                            color: AppColors.textSecondary)),
                     TextButton(
                       onPressed: () => context.go(AppRoutes.moodHistory),
                       child: Text(
@@ -236,25 +220,24 @@ class DashboardScreen extends ConsumerWidget {
                 _WeeklyMoodChart(moodHistory: moodHistory),
                 const SizedBox(height: 24),
 
-                // Wellness resources
+                // ── Wellness resources ─────────────────────────
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
                         lang == 'sw'
                             ? 'RASILIMALI ZA AFYA'
-                            : 'WELLNESS\nRESOURCES',
+                            : 'WELLNESS RESOURCES',
                         style: const TextStyle(
                             fontFamily: 'Nunito',
                             fontSize: 12,
                             fontWeight: FontWeight.w700,
                             letterSpacing: 0.5,
-                            color: Colors.white54,
-                            height: 1.4)),
+                            color: AppColors.textSecondary)),
                     TextButton(
                       onPressed: () => context.go(AppRoutes.resources),
                       child: Text(
-                        lang == 'sw' ? 'Tazama Zote' : 'See all',
+                        lang == 'sw' ? 'Tazama Zote →' : 'See all →',
                         style: const TextStyle(
                             fontFamily: 'Nunito',
                             fontSize: 11,
@@ -264,7 +247,7 @@ class DashboardScreen extends ConsumerWidget {
                     ),
                   ],
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 8),
                 _ResourceTeaser(lang: lang),
                 const SizedBox(height: 40),
               ]),
@@ -276,7 +259,7 @@ class DashboardScreen extends ConsumerWidget {
   }
 }
 
-// ── Sub-widgets ─────────────────────────────────────────────
+// ── Sub-widgets ─────────────────────────────────────────────────
 
 class _DailyCheckinCard extends StatelessWidget {
   final String lang;
@@ -287,61 +270,73 @@ class _DailyCheckinCard extends StatelessWidget {
         onTap: () => context.go(AppRoutes.dailyCheckin),
         child: Container(
           padding: const EdgeInsets.all(20),
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-                colors: [AppColors.accent, AppColors.accentLight],
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+                colors: [Color(0xFFFFB347), Color(0xFFFFCC70)],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight),
-            borderRadius: BorderRadius.all(Radius.circular(20)),
+            borderRadius: BorderRadius.circular(18),
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          child: Row(
             children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    lang == 'sw' ? "JUKUMU LA LEO" : "TODAY'S MISSION",
-                    style: const TextStyle(
-                        fontFamily: 'Nunito',
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 0.5,
-                        color: Colors.white70),
-                  ),
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.3),
-                      borderRadius: BorderRadius.circular(6),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      lang == 'sw' ? "JUKUMU LA LEO" : "TODAY'S MISSION",
+                      style: const TextStyle(
+                          fontFamily: 'Nunito',
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 0.5,
+                          color: Color(0xFF7A4A00)),
                     ),
-                    child: const Text('+30\nXP',
-                        textAlign: TextAlign.center,
+                    const SizedBox(height: 6),
+                    Text(
+                      lang == 'sw' ? 'Check-in ya Leo ⭐' : 'Daily Check-in ⭐',
+                      style: const TextStyle(
+                          fontFamily: 'Nunito',
+                          fontSize: 18,
+                          fontWeight: FontWeight.w800,
+                          color: Color(0xFF3A2800)),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                        lang == 'sw'
+                            ? 'Unajisikiaje leo?'
+                            : 'How are you feeling today?',
+                        style: const TextStyle(
+                            fontFamily: 'Nunito',
+                            fontSize: 13,
+                            color: Color(0xFF7A4A00))),
+                  ],
+                ),
+              ),
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.3),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Column(
+                  children: [
+                    Text('+30',
                         style: TextStyle(
                             fontFamily: 'Nunito',
-                            fontSize: 12,
+                            fontSize: 14,
                             fontWeight: FontWeight.w800,
-                            color: Colors.white)),
-                  ),
-                ],
+                            color: Color(0xFF3A2800))),
+                    Text('XP',
+                        style: TextStyle(
+                            fontFamily: 'Nunito',
+                            fontSize: 10,
+                            fontWeight: FontWeight.w700,
+                            color: Color(0xFF7A4A00))),
+                  ],
+                ),
               ),
-              const SizedBox(height: 12),
-              Text(lang == 'sw' ? 'Check-in ya Leo' : 'Daily Check-in',
-                  style: const TextStyle(
-                      fontFamily: 'Nunito',
-                      fontSize: 18,
-                      fontWeight: FontWeight.w800,
-                      color: AppColors.textPrimary)),
-              const SizedBox(height: 4),
-              Text(
-                  lang == 'sw'
-                      ? 'Unajisikiaje leo?'
-                      : 'How are you feeling today?',
-                  style: const TextStyle(
-                      fontFamily: 'Nunito',
-                      fontSize: 14,
-                      color: AppColors.textSecondary)),
             ],
           ),
         ),
@@ -361,16 +356,17 @@ class _StatsRow extends StatelessWidget {
             child: _Stat(
                 '🔥',
                 '${stats.streakDays}',
-                lang == 'sw' ? 'Siku za Msururu' : 'Day streak',
-                const Color(0xFF2E2E4F))),
+                lang == 'sw' ? 'Msururu' : 'Streak',
+                const Color(0xFFF0F0F0))),
         const SizedBox(width: 12),
         Expanded(
-            child: _Stat('🏅', '$badgeCount', lang == 'sw' ? 'Tuzo' : 'Badges',
-                const Color(0xFF2E2E4F))),
+            child: _Stat('🏅', '$badgeCount',
+                lang == 'sw' ? 'Tuzo' : 'Badges', const Color(0xFFF0F0F0))),
         const SizedBox(width: 12),
         Expanded(
             child: _Stat('💬', '${stats.totalSessions}',
-                lang == 'sw' ? 'Vikao' : 'Sessions', const Color(0xFF2E2E4F))),
+                lang == 'sw' ? 'Vikao' : 'Sessions',
+                const Color(0xFFF0F0F0))),
       ]);
 }
 
@@ -381,27 +377,27 @@ class _Stat extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Container(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
           color: color,
           borderRadius: BorderRadius.circular(12),
         ),
         child: Column(children: [
-          Text(icon, style: const TextStyle(fontSize: 24)),
-          const SizedBox(height: 8),
+          Text(icon, style: const TextStyle(fontSize: 22)),
+          const SizedBox(height: 6),
           Text(value,
               style: const TextStyle(
                   fontFamily: 'Nunito',
                   fontSize: 20,
                   fontWeight: FontWeight.w800,
-                  color: Colors.white)),
-          const SizedBox(height: 4),
+                  color: AppColors.textPrimary)),
+          const SizedBox(height: 2),
           Text(label,
               style: const TextStyle(
                   fontFamily: 'Nunito',
                   fontSize: 11,
                   fontWeight: FontWeight.w600,
-                  color: Colors.white70)),
+                  color: AppColors.textSecondary)),
         ]),
       );
 }
@@ -418,28 +414,28 @@ class _QuickActions extends StatelessWidget {
         label: lang == 'sw' ? 'Chat na AI' : 'Chat with AI',
         sublabel: 'Available 24/7',
         route: AppRoutes.chat,
-        color: const Color(0xFF5E4B9E),
+        color: const Color(0xFF7A8EAD), // slate blue
       ),
       (
         icon: '😊',
         label: lang == 'sw' ? 'Rekodi Hisia' : 'Log Mood',
         sublabel: '+20 XP reward',
         route: AppRoutes.mood,
-        color: const Color(0xFF2E7D5C),
+        color: const Color(0xFF5B9B7A), // teal green
       ),
       (
         icon: '🎯',
         label: lang == 'sw' ? 'Dhamira' : 'My Quests',
-        sublabel: '2 active now',
+        sublabel: 'Active',
         route: AppRoutes.quests,
-        color: const Color(0xFF8B6F47),
+        color: const Color(0xFF7A8EAD), // slate blue
       ),
       (
-        icon: '🎨',
+        icon: '📖',
         label: lang == 'sw' ? 'Rasilimali' : 'Resources',
         sublabel: 'Articles & tips',
         route: AppRoutes.resources,
-        color: const Color(0xFF3D6B8E),
+        color: const Color(0xFF7A8060), // olive
       ),
     ];
     return GridView.count(
@@ -448,7 +444,7 @@ class _QuickActions extends StatelessWidget {
       crossAxisCount: 2,
       mainAxisSpacing: 12,
       crossAxisSpacing: 12,
-      childAspectRatio: 1.8,
+      childAspectRatio: 1.6,
       children: items.asMap().entries.map((e) {
         final a = e.value;
         return GestureDetector(
@@ -463,15 +459,14 @@ class _QuickActions extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(a.icon, style: const TextStyle(fontSize: 28)),
-                const SizedBox(height: 8),
+                Text(a.icon, style: const TextStyle(fontSize: 26)),
+                const SizedBox(height: 6),
                 Text(a.label,
                     style: const TextStyle(
                         fontFamily: 'Nunito',
                         fontSize: 14,
                         fontWeight: FontWeight.w700,
                         color: Colors.white)),
-                const SizedBox(height: 2),
                 Text(a.sublabel,
                     style: const TextStyle(
                         fontFamily: 'Nunito',
@@ -486,6 +481,7 @@ class _QuickActions extends StatelessWidget {
   }
 }
 
+// ── Resource Teaser as LIST (matches screenshot) ────────────────
 class _ResourceTeaser extends StatelessWidget {
   final String lang;
   const _ResourceTeaser({required this.lang});
@@ -494,81 +490,107 @@ class _ResourceTeaser extends StatelessWidget {
   Widget build(BuildContext context) {
     final items = [
       (
-        title:
-            lang == 'sw' ? 'Mazoezi ya Kupumua' : 'Box Breathing for Anxiety',
+        title: lang == 'sw' ? 'Mazoezi ya Kupumua' : 'Box Breathing for Anxiety',
         category: lang == 'sw' ? 'MAZOEZI' : 'EXERCISE',
-        tag: 'Mindfulness',
+        subtitle: lang == 'sw'
+            ? 'Mbinu ya haraka ya kupunguza wasiwasi'
+            : 'A quick technique to calm anxiety fast',
         icon: '🌬️',
+        catColor: const Color(0xFF4A9176),
       ),
       (
-        title: lang == 'sw' ? 'Fahamu Wasiwasi' : 'Understanding Depression',
+        title:
+            lang == 'sw' ? 'Fahamu Unyogovu' : 'Understanding Depression',
         category: lang == 'sw' ? 'MAKALA' : 'ARTICLE',
-        tag: 'Awareness',
-        icon: '📖',
+        subtitle: lang == 'sw'
+            ? 'Dalili, sababu na njia za uponyaji'
+            : 'Symptoms, causes and paths to healing',
+        icon: '📊',
+        catColor: const Color(0xFF4A9176),
       ),
     ];
-    return GridView.count(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      crossAxisCount: 2,
-      mainAxisSpacing: 12,
-      crossAxisSpacing: 12,
-      childAspectRatio: 1.3,
+
+    return Column(
       children: items
-          .asMap()
-          .entries
-          .map((e) => GestureDetector(
+          .map((item) => GestureDetector(
                 onTap: () => context.go(AppRoutes.resources),
                 child: Container(
-                  padding: const EdgeInsets.all(16),
+                  margin: const EdgeInsets.only(bottom: 10),
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 16, vertical: 14),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.08),
-                    borderRadius: BorderRadius.circular(16),
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(14),
                     border: Border.all(
-                        color: Colors.white.withOpacity(0.1), width: 1),
+                        color: Colors.grey.shade200, width: 1),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.04),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
                   ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  child: Row(
                     children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            e.value.category,
-                            style: const TextStyle(
-                                fontFamily: 'Nunito',
-                                fontSize: 10,
-                                fontWeight: FontWeight.w700,
-                                letterSpacing: 0.5,
-                                color: Colors.white54),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(e.value.title,
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                  fontFamily: 'Nunito',
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w700,
-                                  color: Colors.white)),
-                        ],
-                      ),
                       Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 10, vertical: 4),
+                        width: 44,
+                        height: 44,
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(4),
+                          color: AppColors.primary.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(10),
                         ),
-                        child: Text(
-                          e.value.tag,
-                          style: const TextStyle(
-                              fontFamily: 'Nunito',
-                              fontSize: 10,
-                              color: Colors.white70),
+                        child: Center(
+                          child: Text(item.icon,
+                              style: const TextStyle(fontSize: 22)),
                         ),
                       ),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 8, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: item.catColor.withOpacity(0.12),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: Text(
+                                item.category,
+                                style: TextStyle(
+                                    fontFamily: 'Nunito',
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w700,
+                                    letterSpacing: 0.5,
+                                    color: item.catColor),
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              item.title,
+                              style: const TextStyle(
+                                fontFamily: 'Nunito',
+                                fontSize: 14,
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.textPrimary,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              item.subtitle,
+                              style: const TextStyle(
+                                fontFamily: 'Nunito',
+                                fontSize: 12,
+                                color: AppColors.textSecondary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const Icon(Icons.arrow_forward_ios_rounded,
+                          color: AppColors.textHint, size: 14),
                     ],
                   ),
                 ),
@@ -578,6 +600,7 @@ class _ResourceTeaser extends StatelessWidget {
   }
 }
 
+// ── Weekly Mood Chart ─────────────────────────────────────────
 class _WeeklyMoodChart extends StatelessWidget {
   final List<MoodLog> moodHistory;
   const _WeeklyMoodChart({required this.moodHistory});
@@ -585,13 +608,12 @@ class _WeeklyMoodChart extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final weekDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    final today = DateTime.now().weekday - 1; // 0 = Monday
 
-    // Create a map of mood logs by day of week (0 = Monday)
     final moodByDay = <int, MoodLog>{};
     for (var mood in moodHistory) {
       final dayOfWeek = mood.loggedAt.weekday - 1;
       if (dayOfWeek >= 0 && dayOfWeek < 7) {
-        // Keep the most recent mood for each day
         if (!moodByDay.containsKey(dayOfWeek) ||
             mood.loggedAt.isAfter(moodByDay[dayOfWeek]!.loggedAt)) {
           moodByDay[dayOfWeek] = mood;
@@ -599,38 +621,42 @@ class _WeeklyMoodChart extends StatelessWidget {
       }
     }
 
-    const colors = [
-      Color(0xFF5E4B9E),
-      Color(0xFF8B6F47),
-      Color(0xFF3D8B9D),
-      Color(0xFF8B6F47),
-      Color(0xFFA03860),
-      Color(0xFF3D8B9D),
-      Color(0xFF2E2E4F),
-    ];
-
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: List.generate(7, (i) {
         final mood = moodByDay[i];
+        final isToday = i == today;
         return Container(
-          width: (MediaQuery.of(context).size.width - 40 - 72) / 7,
-          height: 70,
+          width: (MediaQuery.of(context).size.width - 40 - 48) / 7,
+          height: 72,
           decoration: BoxDecoration(
-            color: colors[i],
-            borderRadius: BorderRadius.circular(12),
+            color: isToday
+                ? AppColors.primary.withOpacity(0.08)
+                : Colors.white,
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(
+              color: isToday
+                  ? AppColors.primary.withOpacity(0.4)
+                  : Colors.grey.shade200,
+              width: isToday ? 1.5 : 1,
+            ),
           ),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text(mood?.emoji ?? '—', style: const TextStyle(fontSize: 24)),
+              Text(mood?.emoji ?? '—',
+                  style: TextStyle(
+                      fontSize: mood != null ? 22 : 14,
+                      color: mood != null ? null : Colors.grey.shade300)),
               const SizedBox(height: 4),
               Text(weekDays[i],
-                  style: const TextStyle(
+                  style: TextStyle(
                       fontFamily: 'Nunito',
                       fontSize: 10,
                       fontWeight: FontWeight.w600,
-                      color: Colors.white)),
+                      color: isToday
+                          ? AppColors.primary
+                          : AppColors.textSecondary)),
             ],
           ),
         );
@@ -639,7 +665,7 @@ class _WeeklyMoodChart extends StatelessWidget {
   }
 }
 
-// ── Quick Crisis Support Card ───────────────────────────────
+// ── Quick Crisis Support Card ───────────────────────────────────
 class _QuickCrisisSupportCard extends StatelessWidget {
   final String lang;
   const _QuickCrisisSupportCard({required this.lang});
@@ -648,29 +674,24 @@ class _QuickCrisisSupportCard extends StatelessWidget {
   Widget build(BuildContext context) => GestureDetector(
         onTap: () => context.go(AppRoutes.crisis),
         child: Container(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                AppColors.crisis.withOpacity(0.12),
-                AppColors.accent.withOpacity(0.08),
-              ],
-            ),
-            borderRadius: BorderRadius.circular(16),
+            color: const Color(0xFFFFF4F0),
+            borderRadius: BorderRadius.circular(14),
             border: Border.all(
-              color: AppColors.crisis.withOpacity(0.3),
-              width: 1.5,
+              color: AppColors.crisis.withOpacity(0.2),
+              width: 1,
             ),
           ),
           child: Row(
             children: [
               Container(
-                padding: const EdgeInsets.all(10),
+                padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: AppColors.crisis.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(12),
+                  color: AppColors.crisis.withOpacity(0.12),
+                  borderRadius: BorderRadius.circular(10),
                 ),
-                child: const Text('🆘', style: TextStyle(fontSize: 20)),
+                child: const Text('🆘', style: TextStyle(fontSize: 18)),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -678,7 +699,7 @@ class _QuickCrisisSupportCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      lang == 'sw' ? 'Haja ya Msaada?' : 'Need Help?',
+                      lang == 'sw' ? 'Haja ya Msaada?' : 'Need Support?',
                       style: const TextStyle(
                         fontFamily: 'Nunito',
                         fontSize: 13,
@@ -688,8 +709,8 @@ class _QuickCrisisSupportCard extends StatelessWidget {
                     ),
                     Text(
                       lang == 'sw'
-                          ? 'Kuwasiliana na jamii ya dharura'
-                          : 'Crisis support & hotlines',
+                          ? 'Msaada wa dharura & Kenya'
+                          : 'Crisis support & Kenya helplines',
                       style: const TextStyle(
                         fontFamily: 'Nunito',
                         fontSize: 11,
@@ -701,8 +722,8 @@ class _QuickCrisisSupportCard extends StatelessWidget {
               ),
               Icon(
                 Icons.arrow_forward_ios_rounded,
-                color: AppColors.crisis.withOpacity(0.6),
-                size: 16,
+                color: AppColors.crisis.withOpacity(0.5),
+                size: 14,
               ),
             ],
           ),
@@ -710,18 +731,3 @@ class _QuickCrisisSupportCard extends StatelessWidget {
       ).animate().fadeIn().slideY(begin: 0.1);
 }
 
-String _getNextTier(String currentTier) {
-  const tierProgression = [
-    'Newcomer',
-    'Explorer',
-    'Voyager',
-    'Pioneer',
-    'Warrior',
-    'Legend',
-  ];
-  final currentIndex = tierProgression.indexOf(currentTier);
-  if (currentIndex >= 0 && currentIndex < tierProgression.length - 1) {
-    return tierProgression[currentIndex + 1];
-  }
-  return 'Legend';
-}

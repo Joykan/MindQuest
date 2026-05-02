@@ -25,14 +25,16 @@ class PeerSupportService {
           .from('peer_posts')
           .select('*, peer_hugs(user_id)')
           .eq('is_approved', true)
-          .eq('is_flagged', false)
+          .eq('is_flagged', false);
+
+// Apply category filter BEFORE range() - filters must come before range
+      if (category != null) query = query.eq('category', category);
+
+      final result = await query
           .order('created_at', ascending: false)
           .range(offset, offset + limit - 1);
 
-      if (category != null) query = query.eq('category', category);
-
-      final data = await query;
-      return (data as List).map((row) {
+      return (result as List).map((row) {
         final post = PeerPost.fromJson(row as Map<String, dynamic>);
         if (currentUserId != null) {
           final hugs = row['peer_hugs'] as List? ?? [];
@@ -75,7 +77,7 @@ class PeerSupportService {
           })
           .select()
           .single();
-      return PeerPost.fromJson(row as Map<String, dynamic>);
+      return PeerPost.fromJson(row);
     } catch (_) {
       // Offline fallback — return local post
       return PeerPost(
@@ -116,14 +118,21 @@ class PeerSupportService {
 
   Future<void> hugPost({required String postId, required String userId}) async {
     try {
-      await _db.from('peer_hugs').upsert({'post_id': postId, 'user_id': userId});
+      await _db
+          .from('peer_hugs')
+          .upsert({'post_id': postId, 'user_id': userId});
       await _db.rpc('increment_peer_hugs', params: {'p_post_id': postId});
     } catch (_) {}
   }
 
-  Future<void> unHugPost({required String postId, required String userId}) async {
+  Future<void> unHugPost(
+      {required String postId, required String userId}) async {
     try {
-      await _db.from('peer_hugs').delete().eq('post_id', postId).eq('user_id', userId);
+      await _db
+          .from('peer_hugs')
+          .delete()
+          .eq('post_id', postId)
+          .eq('user_id', userId);
       await _db.rpc('decrement_peer_hugs', params: {'p_post_id': postId});
     } catch (_) {}
   }
@@ -183,8 +192,9 @@ class PeerSupportService {
           .select()
           .single();
 
-      await _db.rpc('increment_peer_reply_count', params: {'p_post_id': postId});
-      return PeerReply.fromJson(row as Map<String, dynamic>);
+      await _db
+          .rpc('increment_peer_reply_count', params: {'p_post_id': postId});
+      return PeerReply.fromJson(row);
     } catch (_) {
       return PeerReply(
         id: 'local_${DateTime.now().millisecondsSinceEpoch}',
@@ -200,21 +210,31 @@ class PeerSupportService {
     }
   }
 
-  Future<void> hugReply({required String replyId, required String userId}) async {
+  Future<void> hugReply(
+      {required String replyId, required String userId}) async {
     try {
-      await _db.from('peer_reply_hugs').upsert({'reply_id': replyId, 'user_id': userId});
-      await _db.rpc('increment_peer_reply_hugs', params: {'p_reply_id': replyId});
+      await _db
+          .from('peer_reply_hugs')
+          .upsert({'reply_id': replyId, 'user_id': userId});
+      await _db
+          .rpc('increment_peer_reply_hugs', params: {'p_reply_id': replyId});
     } catch (_) {}
   }
 
-  Future<void> unHugReply({required String replyId, required String userId}) async {
+  Future<void> unHugReply(
+      {required String replyId, required String userId}) async {
     try {
-      await _db.from('peer_reply_hugs').delete().eq('reply_id', replyId).eq('user_id', userId);
-      await _db.rpc('decrement_peer_reply_hugs', params: {'p_reply_id': replyId});
+      await _db
+          .from('peer_reply_hugs')
+          .delete()
+          .eq('reply_id', replyId)
+          .eq('user_id', userId);
+      await _db
+          .rpc('decrement_peer_reply_hugs', params: {'p_reply_id': replyId});
     } catch (_) {}
   }
 
-  // ── Real-time ─────────────────────────────────────────────────────────────
+// ── Real-time ─────────────────────────────────────────────────────────────
 
   RealtimeChannel subscribeToNewPosts(void Function(PeerPost) onNew) {
     return _db
@@ -223,14 +243,13 @@ class PeerSupportService {
           event: PostgresChangeEvent.insert,
           schema: 'public',
           table: 'peer_posts',
-          filter: PostgresChangeFilter(
-            type: FilterType.eq,
-            column: 'is_approved',
-            value: true,
-          ),
           callback: (payload) {
             try {
-              onNew(PeerPost.fromJson(payload.newRecord as Map<String, dynamic>));
+              final record = payload.newRecord;
+              // Only notify for approved posts
+              if (record['is_approved'] == true) {
+                onNew(PeerPost.fromJson(record));
+              }
             } catch (_) {}
           },
         )

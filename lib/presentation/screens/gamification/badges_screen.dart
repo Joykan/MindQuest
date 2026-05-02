@@ -18,7 +18,12 @@ class BadgesScreen extends ConsumerWidget {
     final earnedIds = userBadges.map((b) => b.id).toSet();
 
     return Scaffold(
-      appBar: AppBar(title: Text(lang == 'sw' ? 'Tuzo Zangu' : 'My Badges')),
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        titleTextStyle: const TextStyle(fontFamily: 'Nunito', fontSize: 20, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
+        iconTheme: const IconThemeData(color: AppColors.textPrimary),
+        title: Text(lang == 'sw' ? 'Tuzo Zangu' : 'My Badges')),
       body: Column(children: [
         // Progress header
         Container(

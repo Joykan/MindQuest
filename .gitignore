@@ -43,3 +43,27 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# ── Sensitive / Secret Files ────────────────────────────────
+# Real API keys and credentials — NEVER commit these
+lib/core/constants/secrets.dart
+
+# Android local machine paths (contains SDK path for your machine only)
+android/local.properties
+
+# iOS/macOS signing & provisioning
+ios/Runner/GoogleService-Info.plist
+macos/Runner/GoogleService-Info.plist
+*.p12
+*.mobileprovision
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Key store / signing files
+*.jks
+*.keystore
+key.properties
+android/key.properties

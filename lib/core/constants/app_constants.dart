@@ -1,4 +1,5 @@
 // lib/core/constants/app_constants.dart
+import 'secrets.dart';
 
 class AppConstants {
   // ── App Info ────────────────────────────────────────
@@ -8,12 +9,11 @@ class AppConstants {
   static const String appTaglineSw = 'Safari Yako ya Afya ya Akili';
 
   // ── Supabase & API Keys ─────────────────────────────
-  static const String supabaseUrl = 'https://YOUR_PROJECT_ID.supabase.co';
-  static const String supabaseAnonKey =
-      'REDACTED_SUPABASE_KEY';
+  // Keys are stored in secrets.dart (gitignored). See secrets.dart.example.
+  static const String supabaseUrl = Secrets.supabaseUrl;
+  static const String supabaseAnonKey = Secrets.supabaseAnonKey;
 
-  static const String geminiApiKey =
-      'REDACTED_GROQ_KEY';
+  static const String geminiApiKey = Secrets.geminiApiKey;
   static const String geminiModel = 'gemini-1.5-flash';
 
   // ── Gamification ───────────────────────────────────
