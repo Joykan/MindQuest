@@ -78,6 +78,16 @@ jobs:
       - name: Get dependencies
         run: flutter pub get
       
+      - name: Create secrets
+        run: |
+          cat > lib/core/constants/secrets.dart << 'EOF'
+          class Secrets {
+            static const supabaseUrl = '${{ secrets.SUPABASE_URL }}';
+            static const supabaseAnonKey = '${{ secrets.SUPABASE_ANON_KEY }}';
+            static const geminiApiKey = '${{ secrets.GEMINI_API_KEY }}';
+          }
+          EOF
+
       - name: Build web
         run: flutter build web --release --web-renderer html
       
@@ -115,6 +125,16 @@ jobs:
       - name: Get dependencies
         run: flutter pub get
       
+      - name: Create secrets
+        run: |
+          cat > lib/core/constants/secrets.dart << 'EOF'
+          class Secrets {
+            static const supabaseUrl = '${{ secrets.SUPABASE_URL }}';
+            static const supabaseAnonKey = '${{ secrets.SUPABASE_ANON_KEY }}';
+            static const geminiApiKey = '${{ secrets.GEMINI_API_KEY }}';
+          }
+          EOF
+
       - name: Build APK
         run: flutter build apk --release --split-per-abi
       
@@ -152,6 +172,16 @@ jobs:
       - name: Get dependencies
         run: flutter pub get
       
+      - name: Create secrets
+        run: |
+          cat > lib/core/constants/secrets.dart << 'EOF'
+          class Secrets {
+            static const supabaseUrl = '${{ secrets.SUPABASE_URL }}';
+            static const supabaseAnonKey = '${{ secrets.SUPABASE_ANON_KEY }}';
+            static const geminiApiKey = '${{ secrets.GEMINI_API_KEY }}';
+          }
+          EOF
+
       - name: Build AAB
         run: flutter build appbundle --release
       
