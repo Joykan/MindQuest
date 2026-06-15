@@ -19,3 +19,7 @@ fi
 
 echo "Building Flutter Web..."
 ./flutter/bin/flutter build web --release
+
+echo "Preparing Vercel default output directory..."
+mkdir -p public
+cp -R build/web/* public/
