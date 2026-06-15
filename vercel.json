@@ -1,0 +1,11 @@
+{
+  "cleanUrls": true,
+  "buildCommand": "mkdir -p lib/core/constants && echo \"class Secrets { static const supabaseUrl = '${SUPABASE_URL}'; static const supabaseAnonKey = '${SUPABASE_ANON_KEY}'; static const geminiApiKey = '${GEMINI_API_KEY}'; }\" > lib/core/constants/secrets.dart && if [ ! -d \"flutter\" ]; then git clone --depth 1 https://github.com/flutter/flutter.git -b stable; fi && ./flutter/bin/flutter build web --release",
+  "outputDirectory": "build/web",
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+}
