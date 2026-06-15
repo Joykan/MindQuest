@@ -7,6 +7,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'core/constants/app_constants.dart';
 import 'core/di/service_locator.dart';
 import 'core/theme/app_theme.dart';
+import 'core/services/notification_service.dart';
 import 'presentation/providers/providers.dart';
 
 // Auth
@@ -53,6 +54,15 @@ void main() async {
   } catch (e, stack) {
     debugPrint('❌ Service locator error: $e');
     debugPrint(stack.toString());
+  }
+
+  // Notifications
+  try {
+    final notifications = NotificationService();
+    await notifications.init();
+    await notifications.scheduleAllReminders();
+  } catch (e) {
+    debugPrint('⚠️ Notification setup error (non-critical): $e');
   }
 
   runApp(const ProviderScope(child: MindQuestApp()));

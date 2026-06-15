@@ -65,6 +65,30 @@ class _MoodScreenState extends ConsumerState<MoodScreen> {
           .read(supabaseServiceProvider)
           .awardXp(userId: uid, xpAmount: AppConstants.xpPerMoodLog);
 
+      // Update mood-related quest progress
+      try {
+        final svc = ref.read(supabaseServiceProvider);
+        final moodCount = await svc.getMoodLogsCount(uid);
+        // First Mood Log quest — complete after 1 log
+        await svc.updateQuestProgress(
+          userId: uid,
+          questId: 'q_first_log',
+          progress: moodCount >= 1 ? 100 : 0,
+        );
+        // 7-Day Streak quest — progress based on streak days
+        final stats = await svc.getUserStats(uid);
+        if (stats != null) {
+          final streakProgress = ((stats.streakDays / 7) * 100).clamp(0, 100).toInt();
+          await svc.updateQuestProgress(
+            userId: uid,
+            questId: 'q_7day_streak',
+            progress: streakProgress,
+          );
+        }
+      } catch (_) {
+        // Best effort — don't block mood save for quest failures
+      }
+
       ref.invalidate(moodHistoryProvider);
       ref.invalidate(userStatsProvider);
       ref.invalidate(userQuestsProvider);

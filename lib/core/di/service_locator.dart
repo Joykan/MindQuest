@@ -10,6 +10,7 @@ import '../../data/services/gemini_service.dart';
 import '../../data/services/supabase_service.dart';
 import '../services/analytics_service.dart';
 import '../services/logger_service.dart';
+import '../services/notification_service.dart';
 import '../services/sync_service.dart';
 
 final sl = GetIt.instance;
@@ -20,6 +21,7 @@ Future<void> setupServiceLocator() async {
   sl.registerLazySingleton<LoggerService>(() => LoggerService());
   sl.registerLazySingleton<SupabaseService>(() => SupabaseService());
   sl.registerLazySingleton<GeminiService>(() => GeminiService());
+  sl.registerLazySingleton<NotificationService>(() => NotificationService());
 
   // 2. Repositories
   sl.registerLazySingleton<MoodRepository>(

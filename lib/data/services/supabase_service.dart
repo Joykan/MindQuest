@@ -248,80 +248,63 @@ class SupabaseService {
   }
 
   // ── Quest Progress ───────────────────────────────────────
+
   /// Upserts progress for a quest. Auto-completes the quest when progress >= 100.
   Future<void> updateQuestProgress({
     required String userId,
     required String questId,
     required int progress,
   }) async {
+    // questId format: 'q_first_chat', 'q_first_log', 'q_7day_streak'
+    final questTypeMap = {
+      'q_first_chat': 'weekly',     // Chat Champion
+      'q_first_log': 'daily',       // Morning Mindfulness
+      'q_7day_streak': 'milestone', // Gratitude Journey
+    };
+
+    final questType = questTypeMap[questId];
+    if (questType == null) return;
+
+    // Get matching quests
+    final quests = await _db
+        .from('quests')
+        .select('id')
+        .eq('quest_type', questType)
+        .eq('is_active', true);
+
+    if ((quests as List).isEmpty) return;
+
     final clamped = progress.clamp(0, 100);
     final status = clamped >= 100 ? 'completed' : 'in_progress';
-    await _db.from('user_quests').upsert({
-      'user_id': userId,
-      'quest_id': questId,
-      'progress': clamped,
-      'status': status,
-      if (status == 'completed') 'completed_at': DateTime.now().toIso8601String(),
-    }, onConflict: 'user_id,quest_id');
-  }
 
-  /// Returns current progress (0-100) for a single quest, or 0 if not started.
-  Future<int> getUserQuestProgress(String userId, String questId) async {
-    final d = await _db
-        .from('user_quests')
-        .select('progress')
-        .eq('user_id', userId)
-        .eq('quest_id', questId)
-        .maybeSingle();
-    return (d?['progress'] as int?) ?? 0;
+    for (final quest in quests) {
+      await _db.from('user_quests').upsert({
+        'user_id': userId,
+        'quest_id': quest['id'],
+        'progress': clamped,
+        'status': status,
+        if (status == 'completed')
+          'completed_at': DateTime.now().toIso8601String(),
+      }, onConflict: 'user_id,quest_id');
+    }
   }
 
   /// Count total mood logs for this user.
   Future<int> getMoodLogsCount(String userId) async {
     final d = await _db
         .from('mood_logs')
-        .select('id', const FetchOptions(count: CountOption.exact, head: true))
+        .select('id')
         .eq('user_id', userId);
-    return (d as dynamic).count as int? ?? 0;
-  }
-
-  /// Count total completed daily check-ins for this user.
-  Future<int> getCheckinCount(String userId) async {
-    final d = await _db
-        .from('daily_checkins')
-        .select('id', const FetchOptions(count: CountOption.exact, head: true))
-        .eq('user_id', userId)
-        .eq('completed', true);
-    return (d as dynamic).count as int? ?? 0;
+    return (d as List).length;
   }
 
   /// Count total chat sessions for this user.
   Future<int> getChatSessionCount(String userId) async {
     final d = await _db
         .from('chat_sessions')
-        .select('id', const FetchOptions(count: CountOption.exact, head: true))
-        .eq('user_id', userId);
-    return (d as dynamic).count as int? ?? 0;
-  }
-
-  /// Whether the user has read at least one resource (via interactions table).
-  Future<bool> hasReadResource(String userId) async {
-    final d = await _db
-        .from('user_resource_interactions')
         .select('id')
-        .eq('user_id', userId)
-        .limit(1)
-        .maybeSingle();
-    return d != null;
-  }
-
-  /// Record that user read a resource.
-  Future<void> recordResourceRead(String userId, String resourceId) async {
-    await _db.from('user_resource_interactions').upsert({
-      'user_id': userId,
-      'resource_id': resourceId,
-      'interaction_type': 'read',
-    }, onConflict: 'user_id,resource_id');
+        .eq('user_id', userId);
+    return (d as List).length;
   }
 
   /// Stream of user quests for real-time updates.
@@ -332,7 +315,6 @@ class SupabaseService {
         .eq('user_id', userId)
         .asyncMap((rows) async {
           if (rows.isEmpty) return <Quest>[];
-          // Fetch quest definitions for each row
           final questIds = rows.map((r) => r['quest_id'] as String).toList();
           final defs = await _db
               .from('quests')
@@ -351,8 +333,40 @@ class SupabaseService {
           }).whereType<Quest>().toList();
         });
   }
-}
 
+  // ── User Quests (fetch with definitions) ────────────
+  Future<List<Quest>> getUserQuests(String userId) async {
+    // Get user's quest progress
+    final userQuests = await _db
+        .from('user_quests')
+        .select('quest_id, status, progress, completed_at')
+        .eq('user_id', userId);
+
+    // Get all active quest definitions
+    final allQuests = await _db
+        .from('quests')
+        .select()
+        .eq('is_active', true);
+
+    final progressMap = <String, Map<String, dynamic>>{};
+    for (final uq in userQuests as List) {
+      progressMap[uq['quest_id']] = uq;
+    }
+
+    return (allQuests as List).map((def) {
+      final progress = progressMap[def['id']];
+      return Quest.fromJson({
+        ...def,
+        if (progress != null) ...{
+          'status': progress['status'],
+          'progress': progress['progress'],
+          'completed_at': progress['completed_at'],
+        },
+      });
+    }).toList();
+  }
+
+  // ── Resources ────────────────────────────────────────
   Future<List<Resource>> getResources({String? category}) async {
     var q = _db.from('resources').select();
     if (category != null) q = q.eq('category', category);
@@ -367,7 +381,7 @@ class SupabaseService {
         'interaction_type': 'bookmarked',
       });
 
-  // ── Crisis Contacts ──────────────────────────────────────
+  // ── Crisis Contacts ──────────────────────────────────
   Future<List<CrisisContact>> getCrisisContacts() async {
     final d = await _db
         .from('crisis_contacts')
@@ -377,7 +391,7 @@ class SupabaseService {
     return (d as List).map((e) => CrisisContact.fromJson(e)).toList();
   }
 
-  // ── Analytics ────────────────────────────────────────────
+  // ── Analytics ────────────────────────────────────────
   Future<Map<String, dynamic>> getMoodAnalytics(String userId) async {
     final since = DateTime.now().subtract(const Duration(days: 30));
     final d = await _db

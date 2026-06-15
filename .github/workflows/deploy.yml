@@ -25,12 +25,22 @@ jobs:
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.0.0'
+          flutter-version: '3.22.0'
           cache: true
       
       - name: Get dependencies
         run: flutter pub get
       
+      - name: Create secrets
+        run: |
+          cat > lib/core/constants/secrets.dart << 'EOF'
+          class Secrets {
+            static const supabaseUrl = '${{ secrets.SUPABASE_URL }}';
+            static const supabaseAnonKey = '${{ secrets.SUPABASE_ANON_KEY }}';
+            static const geminiApiKey = '${{ secrets.GEMINI_API_KEY }}';
+          }
+          EOF
+
       - name: Generate code
         run: flutter pub run build_runner build --delete-conflicting-outputs
       
@@ -62,7 +72,7 @@ jobs:
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.0.0'
+          flutter-version: '3.22.0'
           cache: true
       
       - name: Get dependencies
@@ -99,7 +109,7 @@ jobs:
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.0.0'
+          flutter-version: '3.22.0'
           cache: true
       
       - name: Get dependencies
@@ -136,7 +146,7 @@ jobs:
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.0.0'
+          flutter-version: '3.22.0'
           cache: true
       
       - name: Get dependencies

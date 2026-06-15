@@ -1,4 +1,5 @@
 // lib/presentation/providers/providers.dart
+import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../data/services/supabase_service.dart';
@@ -563,16 +564,19 @@ class ChatNotifier extends StateNotifier<ChatState> {
   final GeminiService _gemini;
   final String _userId;
   final String _language;
+  final Ref _ref;
 
   ChatNotifier({
     required SupabaseService supabase,
     required GeminiService gemini,
     required String userId,
     required String language,
+    required Ref ref,
   })  : _supabase = supabase,
         _gemini = gemini,
         _userId = userId,
         _language = language,
+        _ref = ref,
         super(const ChatState());
 
   Future<void> startSession() async {
@@ -583,6 +587,9 @@ class ChatNotifier extends StateNotifier<ChatState> {
 
       // Award XP for starting a session and update stats
       unawaited(_supabase.awardXp(userId: _userId, xpAmount: 5));
+
+      // Update chat quest progress (First Chat Session)
+      unawaited(_updateChatQuestProgress());
 
       final greeting = _language == 'sw'
           ? 'Habari! Mimi ni MindQuest 🌟 Unajisikiaje leo?'
@@ -606,6 +613,26 @@ class ChatNotifier extends StateNotifier<ChatState> {
         content: greeting,
         sessionId: localSid,
       );
+    }
+  }
+
+  /// Update quest progress for chat-related quests
+  Future<void> _updateChatQuestProgress() async {
+    if (_userId.isEmpty) return;
+    try {
+      final sessionCount = await _supabase.getChatSessionCount(_userId);
+      // First Chat Session quest — complete after 1 session
+      final firstChatProgress = sessionCount >= 1 ? 100 : 0;
+      await _supabase.updateQuestProgress(
+        userId: _userId,
+        questId: 'q_first_chat',
+        progress: firstChatProgress,
+      );
+      // Invalidate providers so UI refreshes
+      _ref.invalidate(userStatsProvider);
+      _ref.invalidate(userQuestsProvider);
+    } catch (_) {
+      // Best effort — don't block chat for quest failures
     }
   }
 
@@ -698,6 +725,8 @@ class ChatNotifier extends StateNotifier<ChatState> {
         ));
         unawaited(_supabase.awardXp(
             userId: _userId, xpAmount: AppConstants.xpPerChatMessage));
+        // Refresh stats after XP award
+        _ref.invalidate(userStatsProvider);
       }
     } catch (_) {
       _addMessage(
@@ -728,5 +757,6 @@ final chatProvider =
     gemini: gemini,
     userId: userId,
     language: language,
+    ref: ref,
   );
 });

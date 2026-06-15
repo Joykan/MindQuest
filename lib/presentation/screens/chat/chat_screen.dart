@@ -26,6 +26,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   @override
   void initState() {
     super.initState();
+    _focusNode.onKeyEvent = _handleKeyEvent;
     WidgetsBinding.instance.addPostFrameCallback((_) => _init());
   }
 
@@ -76,6 +77,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     }
     return KeyEventResult.ignored;
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -243,7 +245,6 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             isLoading: chat.isLoading,
             lang: lang,
             onSend: _send,
-            onKeyEvent: _handleKeyEvent,
           ),
         ],
       ),
@@ -498,7 +499,6 @@ class _InputBar extends StatelessWidget {
   final bool isLoading;
   final String lang;
   final VoidCallback onSend;
-  final KeyEventResult Function(FocusNode, KeyEvent) onKeyEvent;
 
   const _InputBar({
     required this.controller,
@@ -506,54 +506,57 @@ class _InputBar extends StatelessWidget {
     required this.isLoading,
     required this.lang,
     required this.onSend,
-    required this.onKeyEvent,
   });
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textColor = isDark ? Colors.white : AppColors.textPrimary;
+    final hintColor = isDark ? Colors.white54 : AppColors.textSecondary;
+    final fillColor = isDark ? AppColors.darkInput : AppColors.surfaceVariant;
+    final containerColor = isDark ? AppColors.darkSurface : Colors.white;
+
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 20),
-      color: Colors.white,
+      color: containerColor,
       child: Row(
         children: [
           Expanded(
-            child: Focus(
-              onKeyEvent: onKeyEvent,
-              child: TextField(
-                controller: controller,
-                focusNode: focusNode,
-                maxLines: 4,
-                minLines: 1,
-                maxLength: AppConstants.maxMessageLength,
-                textInputAction: TextInputAction.send,
-                onSubmitted: (_) => onSend(),
-                style: const TextStyle(
+            child: TextField(
+              controller: controller,
+              focusNode: focusNode,
+              maxLines: 4,
+              minLines: 1,
+              maxLength: AppConstants.maxMessageLength,
+              textInputAction: TextInputAction.newline,
+              onSubmitted: (_) => onSend(),
+              cursorColor: AppColors.primary,
+              style: TextStyle(
+                fontFamily: 'Nunito',
+                fontSize: 15,
+                fontWeight: FontWeight.w500,
+                color: textColor,
+              ),
+              decoration: InputDecoration(
+                hintText: lang == 'sw'
+                    ? 'Andika ujumbe... (Enter kutuma)'
+                    : 'Share what\'s on your mind... (Enter to send)',
+                hintStyle: TextStyle(
                   fontFamily: 'Nunito',
-                  fontSize: 15,
-                  fontWeight: FontWeight.w500,
-                  color: AppColors.textPrimary,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w400,
+                  color: hintColor,
                 ),
-                decoration: InputDecoration(
-                  hintText: lang == 'sw'
-                      ? 'Andika ujumbe... (Enter kutuma)'
-                      : 'Share what\'s on your mind... (Enter to send)',
-                  hintStyle: const TextStyle(
-                    fontFamily: 'Nunito',
-                    fontSize: 14,
-                    fontWeight: FontWeight.w400,
-                    color: AppColors.textSecondary,
-                  ),
-                  counterText: '',
-                  filled: true,
-                  fillColor: AppColors.surfaceVariant,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(24),
-                    borderSide: BorderSide.none,
-                  ),
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 14,
-                  ),
+                counterText: '',
+                filled: true,
+                fillColor: fillColor,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(24),
+                  borderSide: BorderSide.none,
+                ),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 14,
                 ),
               ),
             ),
