@@ -88,58 +88,76 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: Colors.white,
-        titleTextStyle: const TextStyle(fontFamily: 'Nunito', fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
+        titleTextStyle: const TextStyle(
+          fontFamily: 'Nunito',
+          fontSize: 16,
+          fontWeight: FontWeight.w700,
+          color: AppColors.textPrimary,
+        ),
         iconTheme: const IconThemeData(color: AppColors.textPrimary),
-        title: Row(mainAxisSize: MainAxisSize.min, children: [
-          Container(
-            width: 36,
-            height: 36,
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                  colors: [AppColors.primary, AppColors.secondary]),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child:
-                const Center(child: Text('🧠', style: TextStyle(fontSize: 20))),
-          ),
-          const SizedBox(width: 10),
-          Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            const Text('MindQuest AI',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
-            Row(
-              children: [
-                Text(
-                  chat.isLoading
-                      ? (lang == 'sw' ? 'Inafikiri...' : 'Thinking...')
-                      : (lang == 'sw' ? 'Iko Mtandaoni' : 'Online'),
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                    color:
-                        chat.isLoading ? AppColors.warning : AppColors.success,
-                  ),
+        title: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [AppColors.primary, AppColors.secondary],
                 ),
-                const SizedBox(width: 8),
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: AppColors.primary.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                  child: Text(
-                    lang == 'sw' ? 'Kiswahili' : 'English',
-                    style: const TextStyle(
-                      fontSize: 9,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.primary,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Center(
+                child: Text('🧠', style: TextStyle(fontSize: 20)),
+              ),
+            ),
+            const SizedBox(width: 10),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'MindQuest AI',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+                ),
+                Row(
+                  children: [
+                    Text(
+                      chat.isLoading
+                          ? (lang == 'sw' ? 'Inafikiri...' : 'Thinking...')
+                          : (lang == 'sw' ? 'Iko Mtandaoni' : 'Online'),
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: chat.isLoading
+                            ? AppColors.warning
+                            : AppColors.success,
+                      ),
                     ),
-                  ),
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Text(
+                        lang == 'sw' ? 'Kiswahili' : 'English',
+                        style: const TextStyle(
+                          fontSize: 9,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
-          ]),
-        ]),
+          ],
+        ),
         actions: [
           if (chat.isCrisisDetected)
             IconButton(
@@ -155,19 +173,19 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             itemBuilder: (BuildContext ctx) => [
               const PopupMenuItem(
                 value: 'en',
-                child: Row(children: [
-                  Text('🇬🇧'),
-                  SizedBox(width: 8),
-                  Text('English'),
-                ]),
+                child: Row(
+                  children: [Text('🇬🇧'), SizedBox(width: 8), Text('English')],
+                ),
               ),
               const PopupMenuItem(
                 value: 'sw',
-                child: Row(children: [
-                  Text('🇰🇪'),
-                  SizedBox(width: 8),
-                  Text('Kiswahili'),
-                ]),
+                child: Row(
+                  children: [
+                    Text('🇰🇪'),
+                    SizedBox(width: 8),
+                    Text('Kiswahili'),
+                  ],
+                ),
               ),
             ],
           ),
@@ -181,51 +199,54 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           ),
         ],
       ),
-      body: Column(children: [
-        if (chat.isCrisisDetected)
-          CrisisAlertWidget(lang: lang, compact: true)
-              .animate()
-              .slideY(begin: -1)
-              .fadeIn(),
+      body: Column(
+        children: [
+          if (chat.isCrisisDetected)
+            CrisisAlertWidget(
+              lang: lang,
+              compact: true,
+            ).animate().slideY(begin: -1).fadeIn(),
 
-        Expanded(
-          child: chat.messages.isEmpty
-              ? _EmptyState(lang: lang)
-              : ListView.builder(
-                  controller: _scrollCtrl,
-                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-                  itemCount: chat.messages.length + (chat.isLoading ? 1 : 0),
-                  itemBuilder: (_, i) {
-                    if (i == chat.messages.length && chat.isLoading) {
-                      return const _TypingBubble();
-                    }
-                    final m = chat.messages[i];
-                    return _Bubble(
-                      content: m.content,
-                      isUser: m.isUser,
-                      isCrisis: m.isCrisisFlagged,
-                      time: m.createdAt,
-                    ).animate().fadeIn(duration: 300.ms).slideY(begin: 0.1);
-                  },
-                ),
-        ),
+          Expanded(
+            child: chat.messages.isEmpty
+                ? _EmptyState(lang: lang)
+                : ListView.builder(
+                    controller: _scrollCtrl,
+                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+                    itemCount: chat.messages.length + (chat.isLoading ? 1 : 0),
+                    itemBuilder: (_, i) {
+                      if (i == chat.messages.length && chat.isLoading) {
+                        return const _TypingBubble();
+                      }
+                      final m = chat.messages[i];
+                      return _Bubble(
+                        content: m.content,
+                        isUser: m.isUser,
+                        isCrisis: m.isCrisisFlagged,
+                        time: m.createdAt,
+                      ).animate().fadeIn(duration: 300.ms).slideY(begin: 0.1);
+                    },
+                  ),
+          ),
 
-        _QuickReplies(
+          _QuickReplies(
             lang: lang,
             onTap: (t) {
               _msgCtrl.text = t;
               _send();
-            }),
+            },
+          ),
 
-        _InputBar(
-          controller: _msgCtrl,
-          focusNode: _focusNode,
-          isLoading: chat.isLoading,
-          lang: lang,
-          onSend: _send,
-          onKeyEvent: _handleKeyEvent,
-        ),
-      ]),
+          _InputBar(
+            controller: _msgCtrl,
+            focusNode: _focusNode,
+            isLoading: chat.isLoading,
+            lang: lang,
+            onSend: _send,
+            onKeyEvent: _handleKeyEvent,
+          ),
+        ],
+      ),
     );
   }
 }
@@ -251,8 +272,9 @@ class _Bubble extends StatelessWidget {
         right: isUser ? 0 : 60,
       ),
       child: Row(
-        mainAxisAlignment:
-            isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
+        mainAxisAlignment: isUser
+            ? MainAxisAlignment.end
+            : MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           if (!isUser) ...[
@@ -261,11 +283,13 @@ class _Bubble extends StatelessWidget {
               height: 32,
               decoration: BoxDecoration(
                 gradient: const LinearGradient(
-                    colors: [AppColors.primary, AppColors.secondary]),
+                  colors: [AppColors.primary, AppColors.secondary],
+                ),
                 borderRadius: BorderRadius.circular(10),
               ),
               child: const Center(
-                  child: Text('🧠', style: TextStyle(fontSize: 18))),
+                child: Text('🧠', style: TextStyle(fontSize: 18)),
+              ),
             ),
             const SizedBox(width: 8),
           ],
@@ -276,8 +300,8 @@ class _Bubble extends StatelessWidget {
                 color: isUser
                     ? AppColors.primary
                     : (isCrisis
-                        ? AppColors.crisis.withOpacity(0.08)
-                        : Colors.white),
+                          ? AppColors.crisis.withOpacity(0.08)
+                          : Colors.white),
                 borderRadius: BorderRadius.only(
                   topLeft: const Radius.circular(20),
                   topRight: const Radius.circular(20),
@@ -290,7 +314,7 @@ class _Bubble extends StatelessWidget {
                         .withOpacity(0.08),
                     blurRadius: 8,
                     offset: const Offset(0, 2),
-                  )
+                  ),
                 ],
                 border: isCrisis && !isUser
                     ? Border.all(color: AppColors.crisis.withOpacity(0.3))
@@ -299,20 +323,23 @@ class _Bubble extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(content,
-                      style: TextStyle(
-                        fontFamily: 'Nunito',
-                        fontSize: 15,
-                        height: 1.5,
-                        color: isUser ? Colors.white : AppColors.textPrimary,
-                      )),
+                  Text(
+                    content,
+                    style: TextStyle(
+                      fontFamily: 'Nunito',
+                      fontSize: 15,
+                      height: 1.5,
+                      color: isUser ? Colors.white : AppColors.textPrimary,
+                    ),
+                  ),
                   const SizedBox(height: 4),
                   Text(
                     '${time.hour.toString().padLeft(2, '0')}:'
                     '${time.minute.toString().padLeft(2, '0')}',
                     style: TextStyle(
-                        fontSize: 10,
-                        color: isUser ? Colors.white60 : AppColors.textHint),
+                      fontSize: 10,
+                      color: isUser ? Colors.white60 : AppColors.textHint,
+                    ),
                   ),
                 ],
               ),
@@ -338,8 +365,9 @@ class _TypingBubbleState extends State<_TypingBubble>
   void initState() {
     super.initState();
     _ctrl = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 1200))
-      ..repeat();
+      vsync: this,
+      duration: const Duration(milliseconds: 1200),
+    )..repeat();
   }
 
   @override
@@ -352,56 +380,60 @@ class _TypingBubbleState extends State<_TypingBubble>
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
-      child: Row(crossAxisAlignment: CrossAxisAlignment.end, children: [
-        Container(
-          width: 32,
-          height: 32,
-          decoration: BoxDecoration(
-            gradient: const LinearGradient(
-                colors: [AppColors.primary, AppColors.secondary]),
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child:
-              const Center(child: Text('🧠', style: TextStyle(fontSize: 18))),
-        ),
-        const SizedBox(width: 8),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: const BorderRadius.only(
-              topLeft: Radius.circular(20),
-              topRight: Radius.circular(20),
-              bottomRight: Radius.circular(20),
-              bottomLeft: Radius.circular(4),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          Container(
+            width: 32,
+            height: 32,
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [AppColors.primary, AppColors.secondary],
+              ),
+              borderRadius: BorderRadius.circular(10),
             ),
-            boxShadow: [
-              BoxShadow(
-                  color: Colors.black.withOpacity(0.06), blurRadius: 8)
-            ],
-          ),
-          child: AnimatedBuilder(
-            animation: _ctrl,
-            builder: (_, __) => Row(
-              mainAxisSize: MainAxisSize.min,
-              children: List.generate(3, (i) {
-                final phase = (_ctrl.value * 3 - i).clamp(0.0, 1.0);
-                final opacity =
-                    0.3 + 0.7 * (phase < 0.5 ? phase * 2 : (1 - phase) * 2);
-                return Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 3),
-                  width: 8,
-                  height: 8,
-                  decoration: BoxDecoration(
-                    color: AppColors.primary.withOpacity(opacity),
-                    shape: BoxShape.circle,
-                  ),
-                );
-              }),
+            child: const Center(
+              child: Text('🧠', style: TextStyle(fontSize: 18)),
             ),
           ),
-        ),
-      ]),
+          const SizedBox(width: 8),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(20),
+                topRight: Radius.circular(20),
+                bottomRight: Radius.circular(20),
+                bottomLeft: Radius.circular(4),
+              ),
+              boxShadow: [
+                BoxShadow(color: Colors.black.withOpacity(0.06), blurRadius: 8),
+              ],
+            ),
+            child: AnimatedBuilder(
+              animation: _ctrl,
+              builder: (_, __) => Row(
+                mainAxisSize: MainAxisSize.min,
+                children: List.generate(3, (i) {
+                  final phase = (_ctrl.value * 3 - i).clamp(0.0, 1.0);
+                  final opacity =
+                      0.3 + 0.7 * (phase < 0.5 ? phase * 2 : (1 - phase) * 2);
+                  return Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 3),
+                    width: 8,
+                    height: 8,
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withOpacity(opacity),
+                      shape: BoxShape.circle,
+                    ),
+                  );
+                }),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -443,13 +475,15 @@ class _QuickReplies extends StatelessWidget {
               borderRadius: BorderRadius.circular(20),
               border: Border.all(color: AppColors.primaryLight),
             ),
-            child: Text(replies[i],
-                style: const TextStyle(
-                  fontFamily: 'Nunito',
-                  fontSize: 13,
-                  color: AppColors.primary,
-                  fontWeight: FontWeight.w600,
-                )),
+            child: Text(
+              replies[i],
+              style: const TextStyle(
+                fontFamily: 'Nunito',
+                fontSize: 13,
+                color: AppColors.primary,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
           ),
         ),
       ),
@@ -480,53 +514,70 @@ class _InputBar extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 20),
       color: Colors.white,
-      child: Row(children: [
-        Expanded(
-          child: Focus(
-            onKeyEvent: onKeyEvent,
-            child: TextField(
-              controller: controller,
-              focusNode: focusNode,
-              maxLines: 4,
-              minLines: 1,
-              maxLength: AppConstants.maxMessageLength,
-              textInputAction: TextInputAction.send,
-              onSubmitted: (_) => onSend(),
-              decoration: InputDecoration(
-                hintText: lang == 'sw'
-                    ? 'Andika ujumbe... (Enter kutuma)'
-                    : 'Share what\'s on your mind... (Enter to send)',
-                counterText: '',
-                filled: true,
-                fillColor: AppColors.surfaceVariant,
-                border: OutlineInputBorder(
+      child: Row(
+        children: [
+          Expanded(
+            child: Focus(
+              onKeyEvent: onKeyEvent,
+              child: TextField(
+                controller: controller,
+                focusNode: focusNode,
+                maxLines: 4,
+                minLines: 1,
+                maxLength: AppConstants.maxMessageLength,
+                textInputAction: TextInputAction.send,
+                onSubmitted: (_) => onSend(),
+                style: const TextStyle(
+                  fontFamily: 'Nunito',
+                  fontSize: 15,
+                  fontWeight: FontWeight.w500,
+                  color: AppColors.textPrimary,
+                ),
+                decoration: InputDecoration(
+                  hintText: lang == 'sw'
+                      ? 'Andika ujumbe... (Enter kutuma)'
+                      : 'Share what\'s on your mind... (Enter to send)',
+                  hintStyle: const TextStyle(
+                    fontFamily: 'Nunito',
+                    fontSize: 14,
+                    fontWeight: FontWeight.w400,
+                    color: AppColors.textSecondary,
+                  ),
+                  counterText: '',
+                  filled: true,
+                  fillColor: AppColors.surfaceVariant,
+                  border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(24),
-                    borderSide: BorderSide.none),
-                contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 20, vertical: 14),
+                    borderSide: BorderSide.none,
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 14,
+                  ),
+                ),
               ),
             ),
           ),
-        ),
-        const SizedBox(width: 10),
-        GestureDetector(
-          onTap: isLoading ? null : onSend,
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            width: 50,
-            height: 50,
-            decoration: BoxDecoration(
-              color: isLoading ? AppColors.primaryLight : AppColors.primary,
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Icon(
-              isLoading ? Icons.hourglass_top_rounded : Icons.send_rounded,
-              color: Colors.white,
-              size: 22,
+          const SizedBox(width: 10),
+          GestureDetector(
+            onTap: isLoading ? null : onSend,
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              width: 50,
+              height: 50,
+              decoration: BoxDecoration(
+                color: isLoading ? AppColors.primaryLight : AppColors.primary,
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Icon(
+                isLoading ? Icons.hourglass_top_rounded : Icons.send_rounded,
+                color: Colors.white,
+                size: 22,
+              ),
             ),
           ),
-        ),
-      ]),
+        ],
+      ),
     );
   }
 }
@@ -539,54 +590,60 @@ class _EmptyState extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Center(
-      child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-        const Text('🧠', style: TextStyle(fontSize: 64))
-            .animate()
-            .scale(curve: Curves.elasticOut),
-        const SizedBox(height: 16),
-        Text(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Text(
+            '🧠',
+            style: TextStyle(fontSize: 64),
+          ).animate().scale(curve: Curves.elasticOut),
+          const SizedBox(height: 16),
+          Text(
             lang == 'sw'
                 ? 'Habari! Mimi ni MindQuest 👋'
                 : 'Hey! I\'m MindQuest 👋',
-            style: Theme.of(context).textTheme.headlineSmall?.copyWith(color: AppColors.textPrimary)),
-        const SizedBox(height: 8),
-        Text(
-          lang == 'sw'
-              ? 'Niambie unajisikiaje leo'
-              : 'Tell me how you\'re feeling today',
-          style: Theme.of(context).textTheme.bodyMedium,
-        ),
-        const SizedBox(height: 12),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-          decoration: BoxDecoration(
-            color: AppColors.primary.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: AppColors.primary.withOpacity(0.3)),
+            style: Theme.of(
+              context,
+            ).textTheme.headlineSmall?.copyWith(color: AppColors.textPrimary),
           ),
-          child: Text(
+          const SizedBox(height: 8),
+          Text(
             lang == 'sw'
-                ? '🇰🇪 Tunazungumza kwa Kiswahili'
-                : '🇬🇧 We\'re chatting in English',
-            style: const TextStyle(
-              fontFamily: 'Nunito',
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              color: AppColors.primary,
+                ? 'Niambie unajisikiaje leo'
+                : 'Tell me how you\'re feeling today',
+            style: Theme.of(context).textTheme.bodyMedium,
+          ),
+          const SizedBox(height: 12),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            decoration: BoxDecoration(
+              color: AppColors.primary.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: AppColors.primary.withOpacity(0.3)),
+            ),
+            child: Text(
+              lang == 'sw'
+                  ? '🇰🇪 Tunazungumza kwa Kiswahili'
+                  : '🇬🇧 We\'re chatting in English',
+              style: const TextStyle(
+                fontFamily: 'Nunito',
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: AppColors.primary,
+              ),
             ),
           ),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          lang == 'sw'
-              ? 'Bonyeza Enter kutuma ujumbe'
-              : 'Press Enter to send a message',
-          style: Theme.of(context)
-              .textTheme
-              .bodySmall
-              ?.copyWith(color: AppColors.textHint),
-        ),
-      ]),
+          const SizedBox(height: 8),
+          Text(
+            lang == 'sw'
+                ? 'Bonyeza Enter kutuma ujumbe'
+                : 'Press Enter to send a message',
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(color: AppColors.textHint),
+          ),
+        ],
+      ),
     );
   }
 }

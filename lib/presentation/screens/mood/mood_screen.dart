@@ -49,7 +49,9 @@ class _MoodScreenState extends ConsumerState<MoodScreen> {
       final lang = ref.read(languageProvider);
 
       // Save mood
-      await ref.read(supabaseServiceProvider).logMood(
+      await ref
+          .read(supabaseServiceProvider)
+          .logMood(
             userId: uid,
             moodValue: _mood!,
             moodLabel: AppConstants.moodLabels[_mood]!,
@@ -65,10 +67,13 @@ class _MoodScreenState extends ConsumerState<MoodScreen> {
 
       ref.invalidate(moodHistoryProvider);
       ref.invalidate(userStatsProvider);
+      ref.invalidate(userQuestsProvider);
 
       // Get AI analysis
       try {
-        final analysis = await ref.read(geminiServiceProvider).analyzeMood(
+        final analysis = await ref
+            .read(geminiServiceProvider)
+            .analyzeMood(
               moodValue: _mood!,
               note: _note.text,
               energyLevel: _energy,
@@ -85,10 +90,11 @@ class _MoodScreenState extends ConsumerState<MoodScreen> {
           _showAnalysisDialog(context, lang);
         } else {
           MQSnackbar.success(
-              context,
-              lang == 'sw'
-                  ? '+${AppConstants.xpPerMoodLog} XP! Hisia zimehifadhiwa! 🌟'
-                  : '+${AppConstants.xpPerMoodLog} XP! Mood logged! 🌟');
+            context,
+            lang == 'sw'
+                ? '+${AppConstants.xpPerMoodLog} XP! Hisia zimehifadhiwa! 🌟'
+                : '+${AppConstants.xpPerMoodLog} XP! Mood logged! 🌟',
+          );
           Future.delayed(const Duration(seconds: 1), () => context.pop());
         }
       }
@@ -149,16 +155,14 @@ class _MoodScreenState extends ConsumerState<MoodScreen> {
                     Navigator.pop(ctx);
                     if (mounted) {
                       MQSnackbar.success(
-                          context,
-                          lang == 'sw'
-                              ? '+${AppConstants.xpPerMoodLog} XP! Hisia zimehifadhiwa! 🌟'
-                              : '+${AppConstants.xpPerMoodLog} XP! Mood logged! 🌟');
-                      Future.delayed(
-                        const Duration(seconds: 1),
-                        () {
-                          if (mounted) context.pop();
-                        },
+                        context,
+                        lang == 'sw'
+                            ? '+${AppConstants.xpPerMoodLog} XP! Hisia zimehifadhiwa! 🌟'
+                            : '+${AppConstants.xpPerMoodLog} XP! Mood logged! 🌟',
                       );
+                      Future.delayed(const Duration(seconds: 1), () {
+                        if (mounted) context.pop();
+                      });
                     }
                   },
                   style: ElevatedButton.styleFrom(
@@ -166,7 +170,8 @@ class _MoodScreenState extends ConsumerState<MoodScreen> {
                     foregroundColor: Colors.white,
                     elevation: 0,
                     shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12)),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
                   child: Text(
                     lang == 'sw' ? 'Asante! ✓' : 'Got it! ✓',
@@ -219,44 +224,53 @@ class _MoodScreenState extends ConsumerState<MoodScreen> {
                 final sel = _mood == v;
                 final col = AppColors.moodColors[v]!;
                 return GestureDetector(
-                  onTap: () => setState(() => _mood = v),
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
-                    width: sel ? 68 : 56,
-                    height: sel ? 86 : 72,
-                    decoration: BoxDecoration(
-                      color: sel
-                          ? AppColors.darkCard
-                          : AppColors.darkSurface,
-                      borderRadius: BorderRadius.circular(18),
-                      border: sel
-                          ? Border.all(color: col, width: 2)
-                          : Border.all(
-                              color: Colors.white.withOpacity(0.08), width: 1),
-                    ),
-                    child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(AppConstants.moodEmojis[v]!,
-                              style: TextStyle(fontSize: sel ? 34 : 26)),
-                          if (sel)
-                            Padding(
-                              padding: const EdgeInsets.only(top: 4),
-                              child: Text(
-                                lang == 'sw'
-                                    ? AppConstants.moodLabelsSw[v]!
-                                    : AppConstants.moodLabels[v]!,
-                                style: TextStyle(
+                      onTap: () => setState(() => _mood = v),
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        width: sel ? 68 : 56,
+                        height: sel ? 86 : 72,
+                        decoration: BoxDecoration(
+                          color: sel
+                              ? AppColors.darkCard
+                              : AppColors.darkSurface,
+                          borderRadius: BorderRadius.circular(18),
+                          border: sel
+                              ? Border.all(color: col, width: 2)
+                              : Border.all(
+                                  color: Colors.white.withOpacity(0.08),
+                                  width: 1,
+                                ),
+                        ),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              AppConstants.moodEmojis[v]!,
+                              style: TextStyle(fontSize: sel ? 34 : 26),
+                            ),
+                            if (sel)
+                              Padding(
+                                padding: const EdgeInsets.only(top: 4),
+                                child: Text(
+                                  lang == 'sw'
+                                      ? AppConstants.moodLabelsSw[v]!
+                                      : AppConstants.moodLabels[v]!,
+                                  style: TextStyle(
                                     fontFamily: 'Nunito',
                                     fontSize: 9,
                                     color: col,
-                                    fontWeight: FontWeight.w700),
-                                textAlign: TextAlign.center,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
                               ),
-                            ),
-                        ]),
-                  ),
-                ).animate(delay: Duration(milliseconds: i * 60)).scale().fadeIn();
+                          ],
+                        ),
+                      ),
+                    )
+                    .animate(delay: Duration(milliseconds: i * 60))
+                    .scale()
+                    .fadeIn();
               }),
             ),
             const SizedBox(height: 28),
@@ -288,18 +302,27 @@ class _MoodScreenState extends ConsumerState<MoodScreen> {
                 onChanged: (v) => setState(() => _energy = v.round()),
               ),
             ),
-            Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-              Text(lang == 'sw' ? 'Chini' : 'Low',
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  lang == 'sw' ? 'Chini' : 'Low',
                   style: const TextStyle(
-                      fontFamily: 'Nunito',
-                      fontSize: 12,
-                      color: Color(0xFF8AAA9A))),
-              Text(lang == 'sw' ? 'Juu' : 'High',
+                    fontFamily: 'Nunito',
+                    fontSize: 12,
+                    color: Color(0xFF8AAA9A),
+                  ),
+                ),
+                Text(
+                  lang == 'sw' ? 'Juu' : 'High',
                   style: const TextStyle(
-                      fontFamily: 'Nunito',
-                      fontSize: 12,
-                      color: Color(0xFF8AAA9A))),
-            ]),
+                    fontFamily: 'Nunito',
+                    fontSize: 12,
+                    color: Color(0xFF8AAA9A),
+                  ),
+                ),
+              ],
+            ),
             const SizedBox(height: 24),
 
             // ── Tags ──────────────────────────────────────────
@@ -326,23 +349,28 @@ class _MoodScreenState extends ConsumerState<MoodScreen> {
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 150),
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 14, vertical: 8),
+                      horizontal: 14,
+                      vertical: 8,
+                    ),
                     decoration: BoxDecoration(
                       color: sel ? AppColors.primary : AppColors.darkSurface,
                       borderRadius: BorderRadius.circular(20),
                       border: sel
                           ? null
                           : Border.all(
-                              color: Colors.white.withOpacity(0.12), width: 1),
+                              color: Colors.white.withOpacity(0.12),
+                              width: 1,
+                            ),
                     ),
-                    child: Text(tag,
-                        style: TextStyle(
-                          fontFamily: 'Nunito',
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                          color:
-                              sel ? Colors.white : const Color(0xFF8AAA9A),
-                        )),
+                    child: Text(
+                      tag,
+                      style: TextStyle(
+                        fontFamily: 'Nunito',
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: sel ? Colors.white : const Color(0xFF8AAA9A),
+                      ),
+                    ),
                   ),
                 );
               }).toList(),
@@ -365,21 +393,26 @@ class _MoodScreenState extends ConsumerState<MoodScreen> {
               maxLines: 4,
               maxLength: 500,
               style: const TextStyle(
-                  fontFamily: 'Nunito', color: Colors.white, fontSize: 14),
+                fontFamily: 'Nunito',
+                color: Colors.white,
+                fontSize: 14,
+              ),
               decoration: InputDecoration(
                 hintText: lang == 'sw'
                     ? 'Andika kidogo zaidi...'
                     : 'Write a little more about how you feel...',
                 hintStyle: const TextStyle(
-                    fontFamily: 'Nunito',
-                    color: Color(0xFF5A7A68),
-                    fontSize: 14),
+                  fontFamily: 'Nunito',
+                  color: Color(0xFF5A7A68),
+                  fontSize: 14,
+                ),
                 counterStyle: const TextStyle(color: Color(0xFF5A7A68)),
                 filled: true,
                 fillColor: AppColors.darkSurface,
                 border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(14),
-                    borderSide: BorderSide.none),
+                  borderRadius: BorderRadius.circular(14),
+                  borderSide: BorderSide.none,
+                ),
                 contentPadding: const EdgeInsets.all(16),
               ),
             ),
@@ -396,7 +429,10 @@ class _MoodScreenState extends ConsumerState<MoodScreen> {
                         width: 20,
                         height: 20,
                         child: CircularProgressIndicator(
-                            color: Colors.white, strokeWidth: 2.5))
+                          color: Colors.white,
+                          strokeWidth: 2.5,
+                        ),
+                      )
                     : const Icon(Icons.save_rounded, size: 20),
                 label: Text(
                   lang == 'sw'
@@ -414,7 +450,8 @@ class _MoodScreenState extends ConsumerState<MoodScreen> {
                   disabledBackgroundColor: AppColors.darkCard,
                   elevation: 0,
                   shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14)),
+                    borderRadius: BorderRadius.circular(14),
+                  ),
                 ),
               ),
             ),
@@ -426,8 +463,11 @@ class _MoodScreenState extends ConsumerState<MoodScreen> {
               height: 50,
               child: OutlinedButton.icon(
                 onPressed: () => context.go(AppRoutes.moodHistory),
-                icon: const Icon(Icons.history_rounded,
-                    color: Color(0xFF8AAA9A), size: 20),
+                icon: const Icon(
+                  Icons.history_rounded,
+                  color: Color(0xFF8AAA9A),
+                  size: 20,
+                ),
                 label: Text(
                   lang == 'sw' ? 'Angalia Historia' : 'View History',
                   style: const TextStyle(
@@ -438,10 +478,10 @@ class _MoodScreenState extends ConsumerState<MoodScreen> {
                   ),
                 ),
                 style: OutlinedButton.styleFrom(
-                  side: const BorderSide(
-                      color: Color(0xFF3A5A48), width: 1.5),
+                  side: const BorderSide(color: Color(0xFF3A5A48), width: 1.5),
                   shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14)),
+                    borderRadius: BorderRadius.circular(14),
+                  ),
                 ),
               ),
             ),

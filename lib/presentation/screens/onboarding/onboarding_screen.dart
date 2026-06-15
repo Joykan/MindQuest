@@ -8,7 +8,6 @@ import '../../../core/constants/app_constants.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../providers/providers.dart';
 
-
 class OnboardingScreen extends ConsumerStatefulWidget {
   const OnboardingScreen({super.key});
   @override
@@ -57,15 +56,30 @@ class _OnboardingState extends ConsumerState<OnboardingScreen> {
   ];
 
   Future<void> _finish() async {
-    final uid = ref.read(supabaseServiceProvider).currentUserId;
-    if (uid != null) {
-      final p = await ref.read(supabaseServiceProvider).getProfile(uid);
-      if (p != null) {
-        await ref.read(supabaseServiceProvider).updateProfile(
-            p.copyWith(language: _lang, onboardingComplete: true));
+    try {
+      final uid = ref.read(supabaseServiceProvider).currentUserId;
+      if (uid != null) {
+        try {
+          final p = await ref.read(supabaseServiceProvider).getProfile(uid);
+          if (p != null) {
+            await ref
+                .read(supabaseServiceProvider)
+                .updateProfile(
+                  p.copyWith(language: _lang, onboardingComplete: true),
+                );
+          }
+        } catch (e) {
+          debugPrint('Error updating profile: $e');
+          // Continue anyway
+        }
+      }
+    } catch (e) {
+      debugPrint('Error in _finish: $e');
+    } finally {
+      if (mounted) {
+        context.go(AppRoutes.home);
       }
     }
-    if (mounted) context.go(AppRoutes.home);
   }
 
   @override
@@ -83,13 +97,21 @@ class _OnboardingState extends ConsumerState<OnboardingScreen> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Row(children: [
-                    _LangBtn('EN', _lang == 'en',
-                        () => setState(() => _lang = 'en')),
-                    const SizedBox(width: 8),
-                    _LangBtn('SW', _lang == 'sw',
-                        () => setState(() => _lang = 'sw')),
-                  ]),
+                  Row(
+                    children: [
+                      _LangBtn(
+                        'EN',
+                        _lang == 'en',
+                        () => setState(() => _lang = 'en'),
+                      ),
+                      const SizedBox(width: 8),
+                      _LangBtn(
+                        'SW',
+                        _lang == 'sw',
+                        () => setState(() => _lang = 'sw'),
+                      ),
+                    ],
+                  ),
                   TextButton(
                     onPressed: _finish,
                     child: Text(
@@ -121,21 +143,24 @@ class _OnboardingState extends ConsumerState<OnboardingScreen> {
                       children: [
                         // Icon/Emoji
                         p.$6
-                            ? Text(p.$1,
-                                    style: const TextStyle(fontSize: 72))
-                                .animate(key: ValueKey('emoji_$i'))
-                                .scale(curve: Curves.elasticOut)
+                            ? Text(p.$1, style: const TextStyle(fontSize: 72))
+                                  .animate(key: ValueKey('emoji_$i'))
+                                  .scale(curve: Curves.elasticOut)
                             : Container(
-                                width: 52,
-                                height: 72,
-                                decoration: BoxDecoration(
-                                  border: Border.all(
-                                    color: AppColors.primaryLight.withValues(alpha: 0.6),
-                                    width: 2,
-                                  ),
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                              ).animate(key: ValueKey('box_$i')).fadeIn().scale(),
+                                    width: 52,
+                                    height: 72,
+                                    decoration: BoxDecoration(
+                                      border: Border.all(
+                                        color: AppColors.primaryLight
+                                            .withValues(alpha: 0.6),
+                                        width: 2,
+                                      ),
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                  )
+                                  .animate(key: ValueKey('box_$i'))
+                                  .fadeIn()
+                                  .scale(),
                         const SizedBox(height: 32),
 
                         // Title
@@ -193,15 +218,16 @@ class _OnboardingState extends ConsumerState<OnboardingScreen> {
                   onPressed: isLast
                       ? _finish
                       : () => _ctrl.nextPage(
-                            duration: const Duration(milliseconds: 300),
-                            curve: Curves.easeInOut,
-                          ),
+                          duration: const Duration(milliseconds: 300),
+                          curve: Curves.easeInOut,
+                        ),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.navButton,
                     foregroundColor: Colors.white,
                     elevation: 0,
                     shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14)),
+                      borderRadius: BorderRadius.circular(14),
+                    ),
                     textStyle: const TextStyle(
                       fontFamily: 'Nunito',
                       fontSize: 16,
@@ -210,7 +236,9 @@ class _OnboardingState extends ConsumerState<OnboardingScreen> {
                   ),
                   child: Text(
                     isLast
-                        ? (_lang == 'sw' ? 'Anza Safari! 🚀' : 'Start Journey! 🚀')
+                        ? (_lang == 'sw'
+                              ? 'Anza Safari! 🚀'
+                              : 'Start Journey! 🚀')
                         : (_lang == 'sw' ? 'Endelea' : 'Next'),
                   ),
                 ),
@@ -231,29 +259,29 @@ class _LangBtn extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => GestureDetector(
-        onTap: onTap,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-          decoration: BoxDecoration(
-            color: selected ? AppColors.darkSurface : Colors.transparent,
-            borderRadius: BorderRadius.circular(10),
-            border: Border.all(
-              color: selected
-                  ? AppColors.primaryLight.withValues(alpha: 0.5)
-                  : const Color(0xFF3A5A48),
-              width: 1.5,
-            ),
-          ),
-          child: Text(
-            label,
-            style: TextStyle(
-              fontFamily: 'Nunito',
-              fontWeight: FontWeight.w700,
-              fontSize: 13,
-              color: selected ? Colors.white : const Color(0xFF8AAA9A),
-            ),
-          ),
+    onTap: onTap,
+    child: AnimatedContainer(
+      duration: const Duration(milliseconds: 200),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+      decoration: BoxDecoration(
+        color: selected ? AppColors.darkSurface : Colors.transparent,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(
+          color: selected
+              ? AppColors.primaryLight.withValues(alpha: 0.5)
+              : const Color(0xFF3A5A48),
+          width: 1.5,
         ),
-      );
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontFamily: 'Nunito',
+          fontWeight: FontWeight.w700,
+          fontSize: 13,
+          color: selected ? Colors.white : const Color(0xFF8AAA9A),
+        ),
+      ),
+    ),
+  );
 }
