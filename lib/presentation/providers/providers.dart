@@ -628,9 +628,12 @@ class ChatNotifier extends StateNotifier<ChatState> {
         questId: 'q_first_chat',
         progress: firstChatProgress,
       );
+      // Check and award any earned badges
+      await _supabase.checkAndAwardBadges(_userId);
       // Invalidate providers so UI refreshes
       _ref.invalidate(userStatsProvider);
       _ref.invalidate(userQuestsProvider);
+      _ref.invalidate(userBadgesProvider);
     } catch (_) {
       // Best effort — don't block chat for quest failures
     }

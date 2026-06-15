@@ -247,6 +247,93 @@ class SupabaseService {
     }).toList();
   }
 
+  /// Check all badge criteria and award any unearned badges.
+  /// Call this after mood logs, chat messages, quest completions, etc.
+  Future<List<String>> checkAndAwardBadges(String userId) async {
+    final allBadges = await getAllBadges();
+    final earnedBadges = await getUserBadges(userId);
+    final earnedNames = earnedBadges.map((b) => b.name).toSet();
+    final awarded = <String>[];
+
+    for (final badge in allBadges) {
+      if (earnedNames.contains(badge.name)) continue;
+
+      bool shouldAward = false;
+
+      switch (badge.name) {
+        case 'First Step':
+          // Completed first check-in or mood log
+          final moodCount = await getMoodLogsCount(userId);
+          shouldAward = moodCount >= 1;
+          break;
+
+        case 'Week Warrior':
+          // 7-day streak
+          final stats = await getUserStats(userId);
+          shouldAward = (stats?.streakDays ?? 0) >= 7;
+          break;
+
+        case 'Mind Explorer':
+          // Sent 10+ messages to MindQuest AI
+          final chatCount = await getChatSessionCount(userId);
+          shouldAward = chatCount >= 10;
+          break;
+
+        case 'Mood Tracker':
+          // Logged mood 7 days in a row
+          final stats = await getUserStats(userId);
+          shouldAward = (stats?.streakDays ?? 0) >= 7;
+          break;
+
+        case 'Quest Completer':
+          // Completed first quest
+          final quests = await getUserQuests(userId);
+          shouldAward = quests.any((q) => q.status == 'completed');
+          break;
+
+        case 'Resilience Star':
+          // Reached Explorer tier
+          final stats = await getUserStats(userId);
+          final tier = stats?.tier ?? 'Newcomer';
+          shouldAward = tier != 'Newcomer';
+          break;
+
+        case 'Mind Master':
+          // Reached Mind Master tier
+          final stats = await getUserStats(userId);
+          final tier = stats?.tier ?? 'Newcomer';
+          shouldAward = tier == 'Mind Master' || tier == 'Legend';
+          break;
+
+        case 'Crisis Helper':
+          // Used crisis support feature
+          try {
+            final d = await _db
+                .from('crisis_events')
+                .select('id')
+                .eq('user_id', userId)
+                .limit(1);
+            shouldAward = (d as List).isNotEmpty;
+          } catch (_) {
+            shouldAward = false;
+          }
+          break;
+
+        // Community Helper (if exists) - placeholder
+        default:
+          break;
+      }
+
+      if (shouldAward) {
+        // Award the badge via the XP function (gives 0 XP, just awards badge)
+        await awardXp(userId: userId, xpAmount: badge.xpReward, badgeId: badge.id);
+        awarded.add(badge.name);
+      }
+    }
+
+    return awarded;
+  }
+
   // ── Quest Progress ───────────────────────────────────────
 
   /// Upserts progress for a quest. Auto-completes the quest when progress >= 100.

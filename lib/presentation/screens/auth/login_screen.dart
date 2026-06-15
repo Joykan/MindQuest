@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/theme/app_theme.dart';
@@ -48,6 +49,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           final profile = await ref
               .read(supabaseServiceProvider)
               .getProfile(uid);
+          if (!mounted) return;
           // If onboarding not complete, show them onboarding; else go home
           if (profile != null && !profile.onboardingComplete) {
             context.go(AppRoutes.onboarding);
@@ -55,6 +57,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             context.go(AppRoutes.home);
           }
         } else {
+          if (!mounted) return;
           context.go(AppRoutes.home);
         }
       }
@@ -87,10 +90,51 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   Future<void> _signInWithGoogle() async {
     setState(() => _googleLoading = true);
     try {
-      await Supabase.instance.client.auth.signInWithOAuth(
-        OAuthProvider.google,
-        redirectTo: 'io.supabase.mindquest://login-callback',
+      // Web client ID from Google Cloud Console (Supabase Auth Server)
+      const webClientId =
+          '404701673936-nu5a45vs054mecep29emu4d8ed4lgv4j.apps.googleusercontent.com';
+
+      final googleSignIn = GoogleSignIn(
+        serverClientId: webClientId,
       );
+
+      final googleUser = await googleSignIn.signIn();
+      if (googleUser == null) {
+        // User cancelled the sign-in
+        if (mounted) setState(() => _googleLoading = false);
+        return;
+      }
+
+      final googleAuth = await googleUser.authentication;
+      final idToken = googleAuth.idToken;
+      final accessToken = googleAuth.accessToken;
+
+      if (idToken == null) {
+        throw Exception('No ID token received from Google.');
+      }
+
+      await Supabase.instance.client.auth.signInWithIdToken(
+        provider: OAuthProvider.google,
+        idToken: idToken,
+        accessToken: accessToken,
+      );
+
+      if (mounted) {
+        final uid = ref.read(supabaseServiceProvider).currentUserId;
+        if (uid != null) {
+          final profile =
+              await ref.read(supabaseServiceProvider).getProfile(uid);
+          if (!mounted) return;
+          if (profile != null && !profile.onboardingComplete) {
+            context.go(AppRoutes.onboarding);
+          } else {
+            context.go(AppRoutes.home);
+          }
+        } else {
+          if (!mounted) return;
+          context.go(AppRoutes.home);
+        }
+      }
     } on AuthException catch (e) {
       if (!mounted) return;
       MQSnackbar.error(

@@ -22,7 +22,7 @@ CREATE TABLE public.profiles (
 -- USER STATS
 -- ============================================================
 CREATE TABLE public.user_stats (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID UNIQUE NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
   xp INTEGER DEFAULT 0 CHECK (xp >= 0),
   level INTEGER DEFAULT 1 CHECK (level >= 1),
@@ -40,7 +40,7 @@ CREATE TABLE public.user_stats (
 -- BADGES
 -- ============================================================
 CREATE TABLE public.badges (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   name TEXT NOT NULL,
   name_sw TEXT,
   description TEXT,
@@ -53,7 +53,7 @@ CREATE TABLE public.badges (
 );
 
 CREATE TABLE public.user_badges (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
   badge_id UUID NOT NULL REFERENCES public.badges(id),
   earned_at TIMESTAMPTZ DEFAULT NOW(),
@@ -64,7 +64,7 @@ CREATE TABLE public.user_badges (
 -- QUESTS
 -- ============================================================
 CREATE TABLE public.quests (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   title TEXT NOT NULL,
   title_sw TEXT,
   description TEXT,
@@ -78,7 +78,7 @@ CREATE TABLE public.quests (
 );
 
 CREATE TABLE public.user_quests (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
   quest_id UUID NOT NULL REFERENCES public.quests(id),
   status TEXT DEFAULT 'in_progress' CHECK (status IN ('in_progress','completed','failed','skipped')),
@@ -92,7 +92,7 @@ CREATE TABLE public.user_quests (
 -- MOOD LOGS
 -- ============================================================
 CREATE TABLE public.mood_logs (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
   mood_value INTEGER NOT NULL CHECK (mood_value BETWEEN 1 AND 5),
   mood_label TEXT NOT NULL,
@@ -107,7 +107,7 @@ CREATE TABLE public.mood_logs (
 -- CHAT SESSIONS & MESSAGES
 -- ============================================================
 CREATE TABLE public.chat_sessions (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
   title TEXT,
   language TEXT DEFAULT 'en',
@@ -119,7 +119,7 @@ CREATE TABLE public.chat_sessions (
 );
 
 CREATE TABLE public.chat_messages (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   session_id UUID NOT NULL REFERENCES public.chat_sessions(id) ON DELETE CASCADE,
   user_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
   role TEXT NOT NULL CHECK (role IN ('user','assistant')),
@@ -133,7 +133,7 @@ CREATE TABLE public.chat_messages (
 -- RESOURCES
 -- ============================================================
 CREATE TABLE public.resources (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   title TEXT NOT NULL,
   title_sw TEXT,
   content TEXT,
@@ -146,7 +146,7 @@ CREATE TABLE public.resources (
 );
 
 CREATE TABLE public.user_resource_interactions (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
   resource_id UUID NOT NULL REFERENCES public.resources(id),
   interaction_type TEXT CHECK (interaction_type IN ('viewed','bookmarked','completed')),
@@ -158,7 +158,7 @@ CREATE TABLE public.user_resource_interactions (
 -- CRISIS CONTACTS
 -- ============================================================
 CREATE TABLE public.crisis_contacts (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   name TEXT NOT NULL,
   name_sw TEXT,
   phone TEXT,
@@ -170,7 +170,7 @@ CREATE TABLE public.crisis_contacts (
 );
 
 CREATE TABLE public.crisis_events (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
   session_id UUID REFERENCES public.chat_sessions(id),
   trigger_keywords TEXT[],
@@ -183,7 +183,7 @@ CREATE TABLE public.crisis_events (
 -- DAILY CHECK-INS
 -- ============================================================
 CREATE TABLE public.daily_checkins (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
   checkin_date DATE NOT NULL DEFAULT CURRENT_DATE,
   mood_log_id UUID REFERENCES public.mood_logs(id),

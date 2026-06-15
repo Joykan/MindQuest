@@ -85,6 +85,8 @@ class _MoodScreenState extends ConsumerState<MoodScreen> {
             progress: streakProgress,
           );
         }
+        // Check and award any earned badges
+        await svc.checkAndAwardBadges(uid);
       } catch (_) {
         // Best effort — don't block mood save for quest failures
       }
@@ -92,6 +94,7 @@ class _MoodScreenState extends ConsumerState<MoodScreen> {
       ref.invalidate(moodHistoryProvider);
       ref.invalidate(userStatsProvider);
       ref.invalidate(userQuestsProvider);
+      ref.invalidate(userBadgesProvider);
 
       // Get AI analysis
       try {

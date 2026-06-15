@@ -224,8 +224,8 @@ class AppTheme {
               fontFamily: 'Nunito', color: Color(0xFF6A8A78), fontSize: 15),
           labelStyle: const TextStyle(
               fontFamily: 'Nunito', color: Color(0xFF8AAA9A), fontSize: 15),
-          prefixIconColor: Color(0xFF8AAA9A),
-          suffixIconColor: Color(0xFF8AAA9A),
+          prefixIconColor: const Color(0xFF8AAA9A),
+          suffixIconColor: const Color(0xFF8AAA9A),
         ),
         textTheme: const TextTheme(
           displayLarge: TextStyle(

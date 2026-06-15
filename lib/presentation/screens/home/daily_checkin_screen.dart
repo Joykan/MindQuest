@@ -169,8 +169,9 @@ class _DailyCheckinState extends ConsumerState<DailyCheckinScreen> {
     if (_mood == null) return;
     setState(() => _loading = true);
     try {
-      final uid = ref.read(supabaseServiceProvider).currentUserId!;
-      await ref.read(supabaseServiceProvider).completeDailyCheckin(
+      final svc = ref.read(supabaseServiceProvider);
+      final uid = svc.currentUserId!;
+      await svc.completeDailyCheckin(
             userId: uid,
             moodValue: _mood!,
             moodLabel: AppConstants.moodLabels[_mood]!,
@@ -178,11 +179,37 @@ class _DailyCheckinState extends ConsumerState<DailyCheckinScreen> {
             goalForDay: _goal.text.isEmpty ? null : _goal.text,
           );
 
+      // Update quests and badges after successful check-in
+      try {
+        // First log/check-in quest — complete after 1 log
+        final moodCount = await svc.getMoodLogsCount(uid);
+        await svc.updateQuestProgress(
+          userId: uid,
+          questId: 'q_first_log',
+          progress: moodCount >= 1 ? 100 : 0,
+        );
+        // 7-Day Streak quest — progress based on streak days
+        final stats = await svc.getUserStats(uid);
+        if (stats != null) {
+          final streakProgress = ((stats.streakDays / 7) * 100).clamp(0, 100).toInt();
+          await svc.updateQuestProgress(
+            userId: uid,
+            questId: 'q_7day_streak',
+            progress: streakProgress,
+          );
+        }
+        // Check and award any earned badges
+        await svc.checkAndAwardBadges(uid);
+      } catch (_) {
+        // Best effort — don't block check-in for quest/badge failures
+      }
+
       // Refresh all relevant data after checkin
       ref.invalidate(todayCheckinProvider);
       ref.invalidate(userStatsProvider);
       ref.invalidate(moodHistoryProvider);
       ref.invalidate(userQuestsProvider);
+      ref.invalidate(userBadgesProvider);
       ref.invalidate(profileProvider);
 
       if (mounted) {
