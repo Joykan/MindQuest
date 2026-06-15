@@ -148,6 +148,18 @@ class _ResourcesScreenState extends ConsumerState<ResourcesScreen> {
   }
 
   void _showDetail(BuildContext ctx, resource, String lang) {
+    // GAMIFICATION TRIGGER
+    final uid = ref.read(currentUserProvider)?.id;
+    if (uid != null && uid.isNotEmpty) {
+      final svc = ref.read(supabaseServiceProvider);
+      svc.updateQuestProgress(userId: uid, questId: 'q_read_resource', progress: 100).then((_) {
+        svc.checkAndAwardBadges(uid).then((_) {
+          ref.invalidate(userQuestsProvider);
+          ref.invalidate(userBadgesProvider);
+        });
+      });
+    }
+
     showModalBottomSheet(
       context: ctx,
       isScrollControlled: true,

@@ -342,21 +342,22 @@ class SupabaseService {
     required String questId,
     required int progress,
   }) async {
-    // questId format: 'q_first_chat', 'q_first_log', 'q_7day_streak'
-    final questTypeMap = {
-      'q_first_chat': 'weekly',     // Chat Champion
-      'q_first_log': 'daily',       // Morning Mindfulness
-      'q_7day_streak': 'milestone', // Gratitude Journey
+    // questId format: 'q_first_chat', 'q_first_log', 'q_7day_streak', 'q_read_resource'
+    final questTitleMap = {
+      'q_first_chat': 'Chat Champion',
+      'q_first_log': 'Morning Mindfulness',
+      'q_7day_streak': 'Gratitude Journey',
+      'q_read_resource': 'Wellness Explorer',
     };
 
-    final questType = questTypeMap[questId];
-    if (questType == null) return;
+    final questTitle = questTitleMap[questId];
+    if (questTitle == null) return;
 
     // Get matching quests
     final quests = await _db
         .from('quests')
         .select('id')
-        .eq('quest_type', questType)
+        .eq('title', questTitle)
         .eq('is_active', true);
 
     if ((quests as List).isEmpty) return;
