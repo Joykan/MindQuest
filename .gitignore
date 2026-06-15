@@ -48,6 +48,9 @@ app.*.map.json
 # Real API keys and credentials — NEVER commit these
 lib/core/constants/secrets.dart
 
+# ── Interview Prep (Local Only) ────────────────────────────────
+INTERVIEW_PREP.md
+
 # Android local machine paths (contains SDK path for your machine only)
 android/local.properties
 
