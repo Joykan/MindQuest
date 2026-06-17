@@ -14,7 +14,7 @@ Built with **Flutter** · **Supabase** · **Google Gemini 1.5 Flash** · **River
 
 | Feature | Description |
 |---|---|
-| 🤖 AI Chat | Gemini 1.5 Flash with bilingual EN/SW support & crisis detection |
+| 🤖 AI Chat | Groq llama-3.1-8b-instant with bilingual EN/SW support & crisis detection |
 | 😊 Mood Tracking | 5-point scale with energy levels, tags, notes & 30-day chart |
 | 🎮 Gamification | XP, levels, tiers, badges, daily quests & streaks |
 | ☀️ Daily Check-in | Mood + gratitude + goals → +30 XP + streak tracking |
@@ -139,7 +139,7 @@ flutter pub get
    - **Project URL** → `SUPABASE_URL`
    - **anon public key** → `SUPABASE_ANON_KEY`
 
-### Step 5 — Get Gemini API Key
+### Step 5 — Get Groq API Key
 1. Go to https://aistudio.google.com/app/apikey
 2. Click **Create API Key**
 3. Copy the key → `GEMINI_API_KEY`
@@ -237,7 +237,7 @@ Built-in keyword detection (EN & SW) triggers crisis support mode with grounding
 | **State Management** | Flutter Riverpod | 2.4+ |
 | **Navigation** | GoRouter | 13.2+ |
 | **Backend** | Supabase (PostgreSQL) | 2.3.4 |
-| **AI / Chat** | Google Gemini 1.5 Flash | Latest |
+| **AI / Chat** | Groq llama-3.1-8b-instant | Latest |
 | **Local Storage** | Hive + SharedPreferences | 2.2.3 / 2.2.3 |
 | **Dependency Injection** | GetIt | 7.6+ |
 | **Charts** | FL Chart | 0.67+ |
