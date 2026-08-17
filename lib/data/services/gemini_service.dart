@@ -1,21 +1,35 @@
 // lib/data/services/gemini_service.dart
-// Powered by Groq API (free tier) + Kenyan MH few-shot NLP
-// ignore_for_file: unnecessary_brace_in_string_interps
+// Powered by Groq API + Kenyan MH few-shot NLP
 
 import 'dart:convert';
+
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
+
 import '../../core/constants/app_constants.dart';
 import 'nlp_dataset.dart';
 
 class GeminiService {
   static final GeminiService _i = GeminiService._();
+
   factory GeminiService() => _i;
+
   GeminiService._();
 
-  static const _base = '/api/chat';
+  // On Flutter Web, /api/chat points to the Vercel API on the same domain.
+  // On Android/iOS, an absolute URL is required.
+  static String get _base {
+    if (kIsWeb) {
+      return '/api/chat';
+    }
+
+    return 'https://mindquest-ai-lovat.vercel.app/api/chat';
+  }
+
   static const _model = 'openai/gpt-oss-20b';
 
-  /// Build system prompt with dynamically injected few-shot examples
+  /// Build the MindQuest system prompt with dynamically injected
+  /// Kenyan mental-health few-shot examples.
   static String _system(String lang, String userMessage) {
     final fewShot = KenyanMHDataset.buildFewShotBlock(
       message: userMessage,
@@ -40,7 +54,9 @@ MTINDO WA MAZUNGUMZO:
 DHARURA — ukiona maneno ya kujidhuru au kujiua:
 Sema mara moja: "Befrienders Kenya: 0800 723 253 | Simu ya Dharura: 1190"
 
-KUMBUKA: Kiswahili PEKEE.$fewShot''';
+KUMBUKA: Kiswahili PEKEE.
+
+$fewShot''';
     }
 
     return '''You are MindQuest — an empathetic AI mental wellness companion for Kenyan youth.
@@ -58,71 +74,174 @@ STYLE:
 - Use CBT techniques naturally (grounding, thought challenging, behavioural activation)
 
 ON CRISIS: Immediately provide:
-"Befrienders Kenya: 0800 723 253 | Kenya Crisis Helpline: 1190"$fewShot''';
+"Befrienders Kenya: 0800 723 253 | Kenya Crisis Helpline: 1190"
+
+$fewShot''';
   }
 
+  /// Send a chat message to the MindQuest backend.
   Future<String> sendMessage({
     required String message,
     required List<Map<String, String>> history,
     required String language,
   }) async {
     final messages = [
-      {'role': 'system', 'content': _system(language, message)},
-      ...history.map((h) => {
-            'role': h['role'] == 'assistant' ? 'assistant' : 'user',
-            'content': h['content'] ?? '',
-          }),
-      {'role': 'user', 'content': message},
+      {
+        'role': 'system',
+        'content': _system(language, message),
+      },
+      ...history.map(
+        (h) => {
+          'role': h['role'] == 'assistant' ? 'assistant' : 'user',
+          'content': h['content'] ?? '',
+        },
+      ),
+      {
+        'role': 'user',
+        'content': message,
+      },
     ];
 
-    final res = await http.post(
-      Uri.parse(_base),
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: jsonEncode({
-        'model': _model,
-        'messages': messages,
-        'max_tokens': 300,
-        'temperature': 0.7,
-      }),
-    );
+    try {
+      debugPrint('MindQuest API URL: $_base');
+      debugPrint('Sending message: $message');
 
-    if (res.statusCode == 200) {
-      final data = jsonDecode(res.body);
-      return data['choices'][0]['message']['content'] as String;
+      final res = await http
+          .post(
+            Uri.parse(_base),
+            headers: {
+              'Content-Type': 'application/json',
+              'Accept': 'application/json',
+            },
+            body: jsonEncode({
+              'model': _model,
+              'messages': messages,
+              'max_tokens': 300,
+              'temperature': 0.7,
+            }),
+          )
+          .timeout(const Duration(seconds: 30));
+
+      debugPrint('MindQuest API status: ${res.statusCode}');
+      debugPrint('MindQuest API response: ${res.body}');
+
+      if (res.statusCode == 200) {
+        final data = jsonDecode(res.body);
+
+        final choices = data['choices'];
+
+        if (choices is List && choices.isNotEmpty) {
+          final content = choices[0]['message']?['content'];
+
+          if (content is String && content.trim().isNotEmpty) {
+            return content.trim();
+          }
+        }
+
+        throw Exception('Invalid AI response format.');
+      }
+
+      if (res.statusCode == 400) {
+        throw Exception(
+          'Invalid request sent to the MindQuest server: ${res.body}',
+        );
+      }
+
+      if (res.statusCode == 401) {
+        throw Exception('Invalid Groq API key.');
+      }
+
+      if (res.statusCode == 429) {
+        throw Exception('Rate limit reached. Please wait a moment.');
+      }
+
+      if (res.statusCode >= 500) {
+        throw Exception(
+          'MindQuest server error ${res.statusCode}: ${res.body}',
+        );
+      }
+
+      throw Exception(
+        'MindQuest API error ${res.statusCode}: ${res.body}',
+      );
+    } catch (e, stackTrace) {
+      debugPrint('MindQuest chat error: $e');
+      debugPrint('MindQuest stack trace: $stackTrace');
+
+      rethrow;
     }
-    if (res.statusCode == 401) throw Exception('Invalid Groq API key.');
-    if (res.statusCode == 429) throw Exception('Rate limit. Wait a moment.');
-    throw Exception('Groq error ${res.statusCode}: ${res.body}');
   }
 
+  /// Detect potentially high-risk/crisis messages locally.
   CrisisDetectionResult detectCrisis(String message) {
     final lower = message.toLowerCase();
+
     final found = [
       ...AppConstants.crisisKeywordsEn,
       ...AppConstants.crisisKeywordsSw,
     ].where((k) => lower.contains(k)).toList();
+
     return CrisisDetectionResult(
-        isCrisis: found.isNotEmpty, triggeredKeywords: found);
+      isCrisis: found.isNotEmpty,
+      triggeredKeywords: found,
+    );
   }
 
+  /// Perform a lightweight local sentiment calculation.
   double quickSentiment(String message) {
     const pos = [
-      'happy', 'good', 'great', 'amazing', 'joy', 'love', 'excited',
-      'grateful', 'better', 'wonderful', 'furaha', 'vizuri', 'safi', 'poa'
+      'happy',
+      'good',
+      'great',
+      'amazing',
+      'joy',
+      'love',
+      'excited',
+      'grateful',
+      'better',
+      'wonderful',
+      'furaha',
+      'vizuri',
+      'safi',
+      'poa',
     ];
+
     const neg = [
-      'sad', 'terrible', 'awful', 'hate', 'depressed', 'anxious', 'scared',
-      'hopeless', 'angry', 'huzuni', 'vibaya', 'mbaya', 'chuki'
+      'sad',
+      'terrible',
+      'awful',
+      'hate',
+      'depressed',
+      'anxious',
+      'scared',
+      'hopeless',
+      'angry',
+      'huzuni',
+      'vibaya',
+      'mbaya',
+      'chuki',
     ];
+
     final lower = message.toLowerCase();
+
     int score = 0;
-    for (final w in pos) { if (lower.contains(w)) score++; }
-    for (final w in neg) { if (lower.contains(w)) score--; }
+
+    for (final word in pos) {
+      if (lower.contains(word)) {
+        score++;
+      }
+    }
+
+    for (final word in neg) {
+      if (lower.contains(word)) {
+        score--;
+      }
+    }
+
     return score.clamp(-3, 3) / 3.0;
   }
 
+  /// Generate an AI insight for a mood log.
   Future<String> analyzeMood({
     required int moodValue,
     required String note,
@@ -130,52 +249,106 @@ ON CRISIS: Immediately provide:
     required List<String> tags,
     required String language,
   }) async {
-    final moodLabels = ['Vibaya Sana', 'Vibaya', 'Sawa', 'Vizuri', 'Bora Kabisa'];
-    final moodLabelsEn = ['Terrible', 'Bad', 'Okay', 'Good', 'Amazing'];
-    final emotionEmojis = ['😢', '😕', '😐', '😊', '😄'];
+    final moodLabels = [
+      'Vibaya Sana',
+      'Vibaya',
+      'Sawa',
+      'Vizuri',
+      'Bora Kabisa',
+    ];
+
+    final moodLabelsEn = [
+      'Terrible',
+      'Bad',
+      'Okay',
+      'Good',
+      'Amazing',
+    ];
+
+    final emotionEmojis = [
+      '😢',
+      '😕',
+      '😐',
+      '😊',
+      '😄',
+    ];
+
+    // Protect against invalid mood values.
+    final safeMoodValue = moodValue.clamp(1, 5);
 
     final prompt = language == 'sw'
-        ? '''Hali ya hisia: ${moodLabels[moodValue - 1]} ${emotionEmojis[moodValue - 1]}
-Nguvu: ${energyLevel}/5 | Maelezo: "$note" | Mada: ${tags.join(', ')}
+        ? '''Hali ya hisia: ${moodLabels[safeMoodValue - 1]} ${emotionEmojis[safeMoodValue - 1]}
+Nguvu: $energyLevel/5 | Maelezo: "$note" | Mada: ${tags.join(', ')}
+
 Toa ushauri mfupi wa huruma (sentensi 1-2). Kiswahili tu.'''
-        : '''Mood: ${moodLabelsEn[moodValue - 1]} ${emotionEmojis[moodValue - 1]}
+        : '''Mood: ${moodLabelsEn[safeMoodValue - 1]} ${emotionEmojis[safeMoodValue - 1]}
 Energy: $energyLevel/5 | Notes: "$note" | Tags: ${tags.join(', ')}
+
 Provide a brief empathetic insight (1-2 sentences). English only.''';
 
-    final res = await http.post(
-      Uri.parse(_base),
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: jsonEncode({
-        'model': _model,
-        'messages': [
-          {
-            'role': 'system',
-            'content': language == 'sw'
-                ? 'Mshauri wa afya ya akili. Kiswahili pekee.'
-                : 'Mental wellness coach for Kenyan youth. English only.',
-          },
-          {'role': 'user', 'content': prompt},
-        ],
-        'max_tokens': 150,
-        'temperature': 0.7,
-      }),
-    );
+    try {
+      final res = await http
+          .post(
+            Uri.parse(_base),
+            headers: {
+              'Content-Type': 'application/json',
+              'Accept': 'application/json',
+            },
+            body: jsonEncode({
+              'model': _model,
+              'messages': [
+                {
+                  'role': 'system',
+                  'content': language == 'sw'
+                      ? 'Mshauri wa afya ya akili. Kiswahili pekee.'
+                      : 'Mental wellness coach for Kenyan youth. English only.',
+                },
+                {
+                  'role': 'user',
+                  'content': prompt,
+                },
+              ],
+              'max_tokens': 150,
+              'temperature': 0.7,
+            }),
+          )
+          .timeout(const Duration(seconds: 30));
 
-    if (res.statusCode == 200) {
-      final data = jsonDecode(res.body);
-      return data['choices'][0]['message']['content'] as String;
+      debugPrint('Mood API status: ${res.statusCode}');
+      debugPrint('Mood API response: ${res.body}');
+
+      if (res.statusCode == 200) {
+        final data = jsonDecode(res.body);
+        final choices = data['choices'];
+
+        if (choices is List && choices.isNotEmpty) {
+          final content = choices[0]['message']?['content'];
+
+          if (content is String && content.trim().isNotEmpty) {
+            return content.trim();
+          }
+        }
+      }
+
+      // Fallback if the AI request fails.
+      return language == 'sw'
+          ? 'Asante kwa kuandika hisia zako! Endelea hivyo.'
+          : 'Thanks for logging your mood! Keep it up.';
+    } catch (e, stackTrace) {
+      debugPrint('Mood analysis error: $e');
+      debugPrint('Mood analysis stack trace: $stackTrace');
+
+      return language == 'sw'
+          ? 'Asante kwa kuandika hisia zako! Endelea hivyo.'
+          : 'Thanks for logging your mood! Keep it up.';
     }
-    return language == 'sw'
-        ? 'Asante kwa kuandika hisia zako! Endelea hivyo.'
-        : 'Thanks for logging your mood! Keep it up.';
   }
 }
 
 class CrisisDetectionResult {
   final bool isCrisis;
   final List<String> triggeredKeywords;
+
   const CrisisDetectionResult({
     required this.isCrisis,
     required this.triggeredKeywords,
