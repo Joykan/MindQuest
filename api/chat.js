@@ -54,7 +54,7 @@ module.exports = async (req, res) => {
 
     // Use the requested model or the default model
     const selectedModel =
-      model || 'openai/gpt-oss-20b';
+      model || 'llama-3.1-8b-instant';
 
     console.log(
       `MindQuest request received. Model: ${selectedModel}`
