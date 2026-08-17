@@ -1,4 +1,10 @@
 # Miscellaneous
+# Android signing — never commit these
+*.jks
+*.keystore
+android/key.properties
+mindquest_keystore_base64.txt
+
 *.class
 *.log
 *.pyc
