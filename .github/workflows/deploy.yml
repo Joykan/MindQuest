@@ -49,7 +49,6 @@ jobs:
           class Secrets {
             static const supabaseUrl = '${{ secrets.SUPABASE_URL }}';
             static const supabaseAnonKey = '${{ secrets.SUPABASE_ANON_KEY }}';
-            static const geminiApiKey = '${{ secrets.GEMINI_API_KEY }}';
           }
           EOF
 
@@ -108,7 +107,6 @@ jobs:
           class Secrets {
             static const supabaseUrl = '${{ secrets.SUPABASE_URL }}';
             static const supabaseAnonKey = '${{ secrets.SUPABASE_ANON_KEY }}';
-            static const geminiApiKey = '${{ secrets.GEMINI_API_KEY }}';
           }
           EOF
 
@@ -170,7 +168,6 @@ jobs:
           class Secrets {
             static const supabaseUrl = '${{ secrets.SUPABASE_URL }}';
             static const supabaseAnonKey = '${{ secrets.SUPABASE_ANON_KEY }}';
-            static const geminiApiKey = '${{ secrets.GEMINI_API_KEY }}';
           }
           EOF
 
@@ -227,7 +224,6 @@ jobs:
           class Secrets {
             static const supabaseUrl = '${{ secrets.SUPABASE_URL }}';
             static const supabaseAnonKey = '${{ secrets.SUPABASE_ANON_KEY }}';
-            static const geminiApiKey = '${{ secrets.GEMINI_API_KEY }}';
           }
           EOF
 

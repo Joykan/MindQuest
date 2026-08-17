@@ -8,13 +8,11 @@ class AppConstants {
   static const String appTagline = 'Your Mental Wellness Journey';
   static const String appTaglineSw = 'Safari Yako ya Afya ya Akili';
 
-  // ── Supabase & API Keys ─────────────────────────────
+  // ── Supabase ─────────────────────────────────────────
   // Keys are stored in secrets.dart (gitignored). See secrets.dart.example.
+  // NOTE: Groq API key is kept server-side on the Vercel proxy — never in the app.
   static const String supabaseUrl = Secrets.supabaseUrl;
   static const String supabaseAnonKey = Secrets.supabaseAnonKey;
-
-  static const String geminiApiKey = Secrets.geminiApiKey;
-  static const String geminiModel = 'gemini-1.5-flash';
 
   // ── Gamification ───────────────────────────────────
   static const int xpPerMoodLog = 20;
