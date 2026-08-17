@@ -13,7 +13,7 @@ class GeminiService {
   GeminiService._();
 
   static const _base = 'https://api.groq.com/openai/v1/chat/completions';
-  static const _model = 'llama-3.1-8b-instant';
+  static const _model = 'openai/gpt-oss-20b';
 
   /// Build system prompt with dynamically injected few-shot examples
   static String _system(String lang, String userMessage) {

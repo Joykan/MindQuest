@@ -1,5 +1,6 @@
 // lib/presentation/providers/providers.dart
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../data/services/supabase_service.dart';
@@ -731,7 +732,8 @@ class ChatNotifier extends StateNotifier<ChatState> {
         // Refresh stats after XP award
         _ref.invalidate(userStatsProvider);
       }
-    } catch (_) {
+    } catch (e) {
+      debugPrint('Chat send error: $e');
       _addMessage(
         id: '${DateTime.now().millisecondsSinceEpoch}_err',
         role: 'assistant',

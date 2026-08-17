@@ -97,11 +97,7 @@ class MindQuestApp extends ConsumerWidget {
       redirect: (context, state) {
         if (state.matchedLocation == AppRoutes.splash) return null;
 
-        final authState = ref.read(authStateProvider);
-
-        if (authState.isLoading) return AppRoutes.splash;
-
-        final isLoggedIn = authState.valueOrNull?.session != null;
+        final isLoggedIn = Supabase.instance.client.auth.currentSession != null;
         final isPublicRoute = [
           AppRoutes.splash,
           AppRoutes.login,
