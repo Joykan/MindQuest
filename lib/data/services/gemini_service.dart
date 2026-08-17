@@ -12,7 +12,7 @@ class GeminiService {
   factory GeminiService() => _i;
   GeminiService._();
 
-  static const _base = 'https://api.groq.com/openai/v1/chat/completions';
+  static const _base = '/api/chat';
   static const _model = 'openai/gpt-oss-20b';
 
   /// Build system prompt with dynamically injected few-shot examples
@@ -79,7 +79,6 @@ ON CRISIS: Immediately provide:
       Uri.parse(_base),
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': 'Bearer ${AppConstants.geminiApiKey}',
       },
       body: jsonEncode({
         'model': _model,
@@ -147,7 +146,6 @@ Provide a brief empathetic insight (1-2 sentences). English only.''';
       Uri.parse(_base),
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': 'Bearer ${AppConstants.geminiApiKey}',
       },
       body: jsonEncode({
         'model': _model,
