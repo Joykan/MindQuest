@@ -7,32 +7,39 @@ on:
       - develop
     tags:
       - 'v*'
+
   pull_request:
     branches:
       - main
 
+
 jobs:
+
   # ──────────────────────────────────────────────────────
   # TESTING & ANALYSIS
   # ──────────────────────────────────────────────────────
   test:
     name: Test & Analyze
     runs-on: ubuntu-latest
-    
+
     steps:
-      - uses: actions/checkout@v3
-      
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.41.7'
           cache: true
-      
+
       - name: Get dependencies
         run: flutter pub get
-      
+
       - name: Create secrets
         run: |
+          mkdir -p lib/core/constants
+
           cat > lib/core/constants/secrets.dart << 'EOF'
           class Secrets {
             static const supabaseUrl = '${{ secrets.SUPABASE_URL }}';
@@ -43,19 +50,20 @@ jobs:
 
       - name: Generate code
         run: flutter pub run build_runner build --delete-conflicting-outputs
-      
+
       - name: Analyze code
         run: flutter analyze
-      
+
       - name: Run tests
         run: flutter test --coverage
-      
+
       - name: Upload coverage
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v5
         with:
           files: ./coverage/lcov.info
           flags: unittests
           name: codecov-umbrella
+
 
   # ──────────────────────────────────────────────────────
   # BUILD WEB
@@ -63,23 +71,34 @@ jobs:
   build-web:
     name: Build Web
     runs-on: ubuntu-latest
+
     needs: test
-    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v'))
-    
+
+    if: >
+      github.event_name == 'push' &&
+      (
+        github.ref == 'refs/heads/main' ||
+        startsWith(github.ref, 'refs/tags/v')
+      )
+
     steps:
-      - uses: actions/checkout@v3
-      
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.41.7'
           cache: true
-      
+
       - name: Get dependencies
         run: flutter pub get
-      
+
       - name: Create secrets
         run: |
+          mkdir -p lib/core/constants
+
           cat > lib/core/constants/secrets.dart << 'EOF'
           class Secrets {
             static const supabaseUrl = '${{ secrets.SUPABASE_URL }}';
@@ -90,43 +109,56 @@ jobs:
 
       - name: Build web
         run: flutter build web --release --web-renderer html
-      
+
       - name: Upload web artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: web-build
           path: build/web
           retention-days: 7
 
+
   # ──────────────────────────────────────────────────────
-  # BUILD ANDROID
+  # BUILD ANDROID APK
   # ──────────────────────────────────────────────────────
   build-android:
     name: Build Android APK
     runs-on: ubuntu-latest
+
     needs: test
-    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v'))
-    
+
+    if: >
+      github.event_name == 'push' &&
+      (
+        github.ref == 'refs/heads/main' ||
+        startsWith(github.ref, 'refs/tags/v')
+      )
+
     steps:
-      - uses: actions/checkout@v3
-      
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
       - name: Setup Java
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v4
         with:
           distribution: 'zulu'
-          java-version: '11'
-      
+          java-version: '17'
+          cache: 'gradle'
+
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.41.7'
           cache: true
-      
+
       - name: Get dependencies
         run: flutter pub get
-      
+
       - name: Create secrets
         run: |
+          mkdir -p lib/core/constants
+
           cat > lib/core/constants/secrets.dart << 'EOF'
           class Secrets {
             static const supabaseUrl = '${{ secrets.SUPABASE_URL }}';
@@ -137,43 +169,51 @@ jobs:
 
       - name: Build APK
         run: flutter build apk --release --split-per-abi
-      
+
       - name: Upload APK artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: android-apks
           path: build/app/outputs/flutter-apk/
           retention-days: 30
 
+
   # ──────────────────────────────────────────────────────
-  # BUILD AAB (For Play Store)
+  # BUILD ANDROID APP BUNDLE
   # ──────────────────────────────────────────────────────
   build-aab:
     name: Build Android App Bundle
     runs-on: ubuntu-latest
+
     needs: test
-    if: startsWith(github.ref, 'refs/tags/v')  # Only on version tags
-    
+
+    if: startsWith(github.ref, 'refs/tags/v')
+
     steps:
-      - uses: actions/checkout@v3
-      
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
       - name: Setup Java
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v4
         with:
           distribution: 'zulu'
-          java-version: '11'
-      
+          java-version: '17'
+          cache: 'gradle'
+
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.41.7'
           cache: true
-      
+
       - name: Get dependencies
         run: flutter pub get
-      
+
       - name: Create secrets
         run: |
+          mkdir -p lib/core/constants
+
           cat > lib/core/constants/secrets.dart << 'EOF'
           class Secrets {
             static const supabaseUrl = '${{ secrets.SUPABASE_URL }}';
@@ -184,32 +224,39 @@ jobs:
 
       - name: Build AAB
         run: flutter build appbundle --release
-      
+
       - name: Upload AAB artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: android-aab
           path: build/app/outputs/bundle/release/app-release.aab
           retention-days: 30
 
+
   # ──────────────────────────────────────────────────────
-  # DEPLOY TO FIREBASE HOSTING (Web)
+  # DEPLOY WEB TO FIREBASE HOSTING
   # ──────────────────────────────────────────────────────
   deploy-web:
     name: Deploy Web to Firebase
     runs-on: ubuntu-latest
+
     needs: build-web
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    
+
+    if: >
+      github.event_name == 'push' &&
+      github.ref == 'refs/heads/main'
+
     steps:
-      - uses: actions/checkout@v3
-      
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
       - name: Download web build
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: web-build
           path: build/web
-      
+
       - name: Deploy to Firebase Hosting
         uses: FirebaseExtended/action-hosting-deploy@v0
         with:
@@ -217,35 +264,43 @@ jobs:
           firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT }}'
           projectId: mindquest-app
           channelId: live
+
         env:
           FIREBASE_CLI_EXPERIMENTS: webframeworks
 
+
   # ──────────────────────────────────────────────────────
-  # CREATE RELEASE
+  # CREATE GITHUB RELEASE
   # ──────────────────────────────────────────────────────
   create-release:
     name: Create GitHub Release
     runs-on: ubuntu-latest
-    needs: [build-aab, build-android]
+
+    needs:
+      - build-aab
+      - build-android
+
     if: startsWith(github.ref, 'refs/tags/v')
-    
+
     steps:
-      - uses: actions/checkout@v3
-      
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
       - name: Download APK
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: android-apks
           path: apk-release
-      
+
       - name: Download AAB
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: android-aab
           path: aab-release
-      
-      - name: Create Release
-        uses: softprops/action-gh-release@v1
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
         with:
           files: |
             apk-release/app-arm64-v8a-release.apk
@@ -255,8 +310,10 @@ jobs:
           draft: false
           prerelease: false
           body_path: CHANGELOG.md
+
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
 
   # ──────────────────────────────────────────────────────
   # NOTIFY DEPLOYMENT
@@ -264,16 +321,20 @@ jobs:
   notify:
     name: Send Notifications
     runs-on: ubuntu-latest
-    needs: [test]
+
+    needs:
+      - test
+
     if: always()
-    
+
     steps:
+
       - name: Notify on Success
         if: github.event_name == 'push' && success()
         run: |
           echo "✅ Build successful!"
           echo "Tests passed and artifacts generated."
-      
+
       - name: Notify on Failure
         if: failure()
         run: |
