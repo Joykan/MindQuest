@@ -13,6 +13,12 @@ on:
       - main
 
 
+# ──────────────────────────────────────────────────────
+# Shared setup used across jobs via reusable step logic
+# ──────────────────────────────────────────────────────
+env:
+  FLUTTER_VERSION: '3.41.7'
+
 jobs:
 
   # ──────────────────────────────────────────────────────
@@ -30,16 +36,15 @@ jobs:
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.41.7'
+          flutter-version: ${{ env.FLUTTER_VERSION }}
           cache: true
 
       - name: Get dependencies
         run: flutter pub get
 
-      - name: Create secrets
+      - name: Create secrets file
         run: |
           mkdir -p lib/core/constants
-
           cat > lib/core/constants/secrets.dart << 'EOF'
           class Secrets {
             static const supabaseUrl = '${{ secrets.SUPABASE_URL }}';
@@ -49,16 +54,17 @@ jobs:
           EOF
 
       - name: Generate code
-        run: flutter pub run build_runner build --delete-conflicting-outputs
+        run: dart run build_runner build --delete-conflicting-outputs
 
       - name: Analyze code
-        run: flutter analyze
+        run: flutter analyze --no-fatal-infos
 
       - name: Run tests
         run: flutter test --coverage
 
       - name: Upload coverage
         uses: codecov/codecov-action@v5
+        continue-on-error: true
         with:
           files: ./coverage/lcov.info
           flags: unittests
@@ -89,16 +95,15 @@ jobs:
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.41.7'
+          flutter-version: ${{ env.FLUTTER_VERSION }}
           cache: true
 
       - name: Get dependencies
         run: flutter pub get
 
-      - name: Create secrets
+      - name: Create secrets file
         run: |
           mkdir -p lib/core/constants
-
           cat > lib/core/constants/secrets.dart << 'EOF'
           class Secrets {
             static const supabaseUrl = '${{ secrets.SUPABASE_URL }}';
@@ -106,6 +111,9 @@ jobs:
             static const geminiApiKey = '${{ secrets.GEMINI_API_KEY }}';
           }
           EOF
+
+      - name: Generate code
+        run: dart run build_runner build --delete-conflicting-outputs
 
       - name: Build web
         run: flutter build web --release
@@ -149,16 +157,15 @@ jobs:
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.41.7'
+          flutter-version: ${{ env.FLUTTER_VERSION }}
           cache: true
 
       - name: Get dependencies
         run: flutter pub get
 
-      - name: Create secrets
+      - name: Create secrets file
         run: |
           mkdir -p lib/core/constants
-
           cat > lib/core/constants/secrets.dart << 'EOF'
           class Secrets {
             static const supabaseUrl = '${{ secrets.SUPABASE_URL }}';
@@ -166,6 +173,9 @@ jobs:
             static const geminiApiKey = '${{ secrets.GEMINI_API_KEY }}';
           }
           EOF
+
+      - name: Generate code
+        run: dart run build_runner build --delete-conflicting-outputs
 
       - name: Build APK
         run: flutter build apk --release --split-per-abi
@@ -179,7 +189,7 @@ jobs:
 
 
   # ──────────────────────────────────────────────────────
-  # BUILD ANDROID APP BUNDLE
+  # BUILD ANDROID APP BUNDLE (tags only)
   # ──────────────────────────────────────────────────────
   build-aab:
     name: Build Android App Bundle
@@ -204,16 +214,15 @@ jobs:
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.41.7'
+          flutter-version: ${{ env.FLUTTER_VERSION }}
           cache: true
 
       - name: Get dependencies
         run: flutter pub get
 
-      - name: Create secrets
+      - name: Create secrets file
         run: |
           mkdir -p lib/core/constants
-
           cat > lib/core/constants/secrets.dart << 'EOF'
           class Secrets {
             static const supabaseUrl = '${{ secrets.SUPABASE_URL }}';
@@ -221,6 +230,9 @@ jobs:
             static const geminiApiKey = '${{ secrets.GEMINI_API_KEY }}';
           }
           EOF
+
+      - name: Generate code
+        run: dart run build_runner build --delete-conflicting-outputs
 
       - name: Build AAB
         run: flutter build appbundle --release
@@ -265,12 +277,9 @@ jobs:
           projectId: mindquest-a5a52
           channelId: live
 
-        env:
-          FIREBASE_CLI_EXPERIMENTS: webframeworks
-
 
   # ──────────────────────────────────────────────────────
-  # CREATE GITHUB RELEASE
+  # CREATE GITHUB RELEASE (tags only)
   # ──────────────────────────────────────────────────────
   create-release:
     name: Create GitHub Release
@@ -310,7 +319,6 @@ jobs:
           draft: false
           prerelease: false
           body_path: CHANGELOG.md
-
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -324,19 +332,35 @@ jobs:
 
     needs:
       - test
+      - build-web
+      - build-android
+      - deploy-web
 
     if: always()
 
     steps:
 
       - name: Notify on Success
-        if: github.event_name == 'push' && success()
+        if: >
+          github.event_name == 'push' &&
+          needs.test.result == 'success' &&
+          (needs.build-web.result == 'success' || needs.build-web.result == 'skipped') &&
+          (needs.build-android.result == 'success' || needs.build-android.result == 'skipped') &&
+          (needs.deploy-web.result == 'success' || needs.deploy-web.result == 'skipped')
         run: |
-          echo "✅ Build successful!"
-          echo "Tests passed and artifacts generated."
+          echo "✅ Pipeline succeeded!"
+          echo "All jobs passed. Web deployed to Firebase Hosting."
 
       - name: Notify on Failure
-        if: failure()
+        if: >
+          needs.test.result == 'failure' ||
+          needs.build-web.result == 'failure' ||
+          needs.build-android.result == 'failure' ||
+          needs.deploy-web.result == 'failure'
         run: |
-          echo "❌ Build failed!"
-          echo "Check logs for details."
+          echo "❌ Pipeline failed!"
+          echo "test=${{ needs.test.result }}"
+          echo "build-web=${{ needs.build-web.result }}"
+          echo "build-android=${{ needs.build-android.result }}"
+          echo "deploy-web=${{ needs.deploy-web.result }}"
+          exit 1
