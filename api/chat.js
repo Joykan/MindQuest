@@ -56,7 +56,9 @@ module.exports = async (req, res) => {
     // model names from the frontend cannot break the request.
     const modelsToTry = [
       'llama-3.3-70b-versatile',
+      'llama-4-scout-17b-16e-instruct',
       'llama-3.1-8b-instant',
+      'llama3-8b-8192',
     ];
 
     let lastError = null;
