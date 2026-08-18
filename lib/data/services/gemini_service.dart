@@ -27,7 +27,7 @@ class GeminiService {
   static const String _base =
       'https://mindquest-ai-lovat.vercel.app/api/chat';
 
-  static const String _model = 'llama-3.3-70b-versatile';
+  static const String _model = 'openai/gpt-oss-20b';
 
   /// Build the MindQuest system prompt with dynamically injected
   /// Kenyan mental-health few-shot examples.
