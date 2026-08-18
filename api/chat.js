@@ -39,7 +39,6 @@ module.exports = async (req, res) => {
     const body = req.body || {};
 
     const {
-      model,
       messages,
       max_tokens,
       temperature,
@@ -52,16 +51,13 @@ module.exports = async (req, res) => {
       });
     }
 
-    // Models to try in order of preference
-    // NOTE: replace the decommissioned model 'llama3-8b-8192' with a supported model.
-    // Recommended replacement: 'meta-llama-3-8b-instruct'
+    // Supported Groq models, tried in order of preference.
+    // The model is controlled by the server so that deprecated
+    // model names from the frontend cannot break the request.
     const modelsToTry = [
-      model,
-      'meta-llama-3-8b-instruct',
-      'llama-3.1-8b-instant',
       'llama-3.3-70b-versatile',
-      'mixtral-8x7b-32768',
-    ].filter(Boolean);
+      'llama-3.1-8b-instant',
+    ];
 
     let lastError = null;
 
@@ -83,7 +79,10 @@ module.exports = async (req, res) => {
           body: JSON.stringify({
             model: selectedModel,
             messages,
-            max_tokens: max_tokens || 300,
+            max_tokens:
+              typeof max_tokens === 'number'
+                ? max_tokens
+                : 300,
             temperature:
               typeof temperature === 'number'
                 ? temperature
@@ -99,13 +98,18 @@ module.exports = async (req, res) => {
         data && data.error ? data.error : ''
       );
 
-      // If successful, return
+      // If successful, return the response
       if (groqRes.status === 200) {
         return res.status(200).json(data);
       }
 
-      // If model not found or decommissioned, try next model
-      const errorCode = data && data.error && data.error.code;
+      // If the model is unavailable or decommissioned,
+      // try the next supported model.
+      const errorCode =
+        data &&
+        data.error &&
+        data.error.code;
+
       if (
         groqRes.status === 404 ||
         errorCode === 'model_not_found' ||
@@ -114,17 +118,22 @@ module.exports = async (req, res) => {
         console.log(
           `Model ${selectedModel} not available (code=${errorCode}), trying next...`
         );
+
         lastError = data;
         continue;
       }
 
-      // For other errors (rate limit, invalid request, etc.), return as-is
+      // For other errors such as rate limits,
+      // invalid requests, authentication errors, etc.,
+      // return the error immediately.
       return res.status(groqRes.status).json(data);
     }
 
     // All models failed
     return res.status(404).json(
-      lastError || { error: 'No available model found' }
+      lastError || {
+        error: 'No available model found',
+      }
     );
   } catch (error) {
     console.error('Groq request failed:', error);
