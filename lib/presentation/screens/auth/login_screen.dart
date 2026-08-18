@@ -90,9 +90,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   Future<void> _signInWithGoogle() async {
     setState(() => _googleLoading = true);
     try {
-      // Web client ID from Google Cloud Console (Supabase Auth Server)
+      // Web client ID from Firebase Console / Google Cloud Console
+      // This must match the OAuth 2.0 Web client from your Firebase project
       const webClientId =
-          '404701673936-nu5a45vs054mecep29emu4d8ed4lgv4j.apps.googleusercontent.com';
+          '86306831002-qltl04tqa9eqdrmvmmnqg1i2icirbd81.apps.googleusercontent.com';
 
       final googleSignIn = GoogleSignIn(
         serverClientId: webClientId,

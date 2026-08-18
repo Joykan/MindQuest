@@ -52,45 +52,70 @@ module.exports = async (req, res) => {
       });
     }
 
-    // Use the requested model or the default model
-    const selectedModel =
-      model || 'llama-3.1-8b-instant';
+    // Models to try in order of preference
+    const modelsToTry = [
+      model,
+      'llama-3.3-70b-versatile',
+      'llama-3.1-8b-instant',
+      'llama3-8b-8192',
+      'mixtral-8x7b-32768',
+    ].filter(Boolean);
 
-    console.log(
-      `MindQuest request received. Model: ${selectedModel}`
-    );
+    let lastError = null;
 
-    // Send request to Groq
-    const groqRes = await fetch(
-      'https://api.groq.com/openai/v1/chat/completions',
-      {
-        method: 'POST',
+    for (const selectedModel of modelsToTry) {
+      console.log(
+        `MindQuest request — trying model: ${selectedModel}`
+      );
 
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${apiKey}`,
-        },
+      const groqRes = await fetch(
+        'https://api.groq.com/openai/v1/chat/completions',
+        {
+          method: 'POST',
 
-        body: JSON.stringify({
-          model: selectedModel,
-          messages,
-          max_tokens: max_tokens || 300,
-          temperature:
-            typeof temperature === 'number'
-              ? temperature
-              : 0.7,
-        }),
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${apiKey}`,
+          },
+
+          body: JSON.stringify({
+            model: selectedModel,
+            messages,
+            max_tokens: max_tokens || 300,
+            temperature:
+              typeof temperature === 'number'
+                ? temperature
+                : 0.7,
+          }),
+        }
+      );
+
+      const data = await groqRes.json();
+
+      console.log(
+        `Groq response status for ${selectedModel}: ${groqRes.status}`
+      );
+
+      // If successful, return
+      if (groqRes.status === 200) {
+        return res.status(200).json(data);
       }
+
+      // If model not found (404) or access denied, try next model
+      if (groqRes.status === 404 || (data.error && data.error.code === 'model_not_found')) {
+        console.log(`Model ${selectedModel} not available, trying next...`);
+        lastError = data;
+        continue;
+      }
+
+      // For other errors (rate limit, etc.), return as-is
+      return res.status(groqRes.status).json(data);
+    }
+
+    // All models failed
+    return res.status(404).json(
+      lastError || { error: 'No available model found' }
     );
-
-    const data = await groqRes.json();
-
-    console.log(
-      `Groq response status: ${groqRes.status}`
-    );
-
-    // Forward Groq's response directly to Flutter
-    return res.status(groqRes.status).json(data);
   } catch (error) {
     console.error('Groq request failed:', error);
 
