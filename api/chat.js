@@ -53,11 +53,13 @@ module.exports = async (req, res) => {
     }
 
     // Models to try in order of preference
+    // NOTE: replace the decommissioned model 'llama3-8b-8192' with a supported model.
+    // Recommended replacement: 'meta-llama-3-8b-instruct'
     const modelsToTry = [
       model,
-      'llama-3.3-70b-versatile',
+      'meta-llama-3-8b-instruct',
       'llama-3.1-8b-instant',
-      'llama3-8b-8192',
+      'llama-3.3-70b-versatile',
       'mixtral-8x7b-32768',
     ].filter(Boolean);
 
@@ -93,7 +95,8 @@ module.exports = async (req, res) => {
       const data = await groqRes.json();
 
       console.log(
-        `Groq response status for ${selectedModel}: ${groqRes.status}`
+        `Groq response status for ${selectedModel}: ${groqRes.status}`,
+        data && data.error ? data.error : ''
       );
 
       // If successful, return
@@ -101,14 +104,21 @@ module.exports = async (req, res) => {
         return res.status(200).json(data);
       }
 
-      // If model not found (404) or access denied, try next model
-      if (groqRes.status === 404 || (data.error && data.error.code === 'model_not_found')) {
-        console.log(`Model ${selectedModel} not available, trying next...`);
+      // If model not found or decommissioned, try next model
+      const errorCode = data && data.error && data.error.code;
+      if (
+        groqRes.status === 404 ||
+        errorCode === 'model_not_found' ||
+        errorCode === 'model_decommissioned'
+      ) {
+        console.log(
+          `Model ${selectedModel} not available (code=${errorCode}), trying next...`
+        );
         lastError = data;
         continue;
       }
 
-      // For other errors (rate limit, etc.), return as-is
+      // For other errors (rate limit, invalid request, etc.), return as-is
       return res.status(groqRes.status).json(data);
     }
 
@@ -121,7 +131,6 @@ module.exports = async (req, res) => {
 
     return res.status(502).json({
       error: 'Failed to reach Groq',
-      detail: String(error),
     });
   }
 };
