@@ -301,6 +301,9 @@ jobs:
     name: Create GitHub Release
     runs-on: ubuntu-latest
 
+    permissions:
+      contents: write
+
     needs:
       - build-aab
       - build-android
