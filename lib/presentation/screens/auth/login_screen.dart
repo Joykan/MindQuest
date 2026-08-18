@@ -74,7 +74,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             : 'Login error: ${e.message}';
       }
       MQSnackbar.error(context, msg);
-    } catch (_) {
+    } catch (e) {
       if (!mounted) return;
       MQSnackbar.error(
         context,
