@@ -738,8 +738,8 @@ class ChatNotifier extends StateNotifier<ChatState> {
         id: '${DateTime.now().millisecondsSinceEpoch}_err',
         role: 'assistant',
         content: _language == 'sw'
-            ? 'Samahani, kuna tatizo kidogo. Jaribu tena. 🙏'
-            : 'Sorry, something went wrong. Please try again. 🙏',
+            ? 'Hitilafu: $e'
+            : 'Error: $e',
         sessionId: sid,
       );
     } finally {

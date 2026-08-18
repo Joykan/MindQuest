@@ -78,8 +78,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       MQSnackbar.error(
           context,
           _lang == 'sw'
-              ? 'Kuna hitilafu. Angalia mtandao wako na ujaribu tena.'
-              : 'An error occurred. Check your connection and try again.');
+              ? 'Kuna hitilafu: $e'
+              : 'Error: $e');
     } finally {
       if (mounted) setState(() => _loading = false);
     }

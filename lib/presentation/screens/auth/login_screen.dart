@@ -80,7 +80,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         context,
         _lang == 'sw'
             ? 'Kuingia kumeshindwa. Angalia mtandao wako.'
-            : 'Login failed. Check your connection.',
+            : 'Login failed: $e',
       );
     } finally {
       if (mounted) setState(() => _loading = false);
@@ -148,8 +148,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       MQSnackbar.error(
         context,
         _lang == 'sw'
-            ? 'Imeshindwa kuingia na Google.'
-            : 'Could not sign in with Google.',
+            ? 'Imeshindwa kuingia na Google: $e'
+            : 'Could not sign in with Google: $e',
       );
     } finally {
       if (mounted) setState(() => _googleLoading = false);
