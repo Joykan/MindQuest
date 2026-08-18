@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "86306831002",
+    "project_id": "mindquest-a5a52",
+    "storage_bucket": "mindquest-a5a52.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:86306831002:android:97c4ec50205c6f367c7d23",
+        "android_client_info": {
+          "package_name": "com.example.mindquest"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "86306831002-34vl55guumen8k64nmdfd2g1f8b8ijeb.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.mindquest",
+            "certificate_hash": "da9beb3bb4ee081efa36087414e068c62d70348b"
+          }
+        },
+        {
+          "client_id": "86306831002-qltl04tqa9eqdrmvmmnqg1i2icirbd81.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCUYYcWxxLAA9Gt2Zj0GR8peFB7-5rwlOE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "86306831002-qltl04tqa9eqdrmvmmnqg1i2icirbd81.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
