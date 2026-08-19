@@ -76,3 +76,7 @@ macos/Runner/GoogleService-Info.plist
 *.keystore
 key.properties
 android/key.properties
+
+android/app/google-services.json
+
+android/app/google-services.json
